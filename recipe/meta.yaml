@@ -1,0 +1,28 @@
+package:
+  name: 'YADDUM'
+  version: '0.1.0'
+
+source:
+  path: ../
+
+build:
+  number: 1
+  noarch: python
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  run:
+    - xarray
+    - jupyter
+    - pylint
+    - python >=3.7
+  host:
+    - python
+    - setuptools
+test:
+  imports:
+    - YADDUM
+
+
+
+
