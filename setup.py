@@ -30,14 +30,13 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
 
-    packages=['YADDYM'],  # Required
-    python_requires='>=3.7',
+    packages=['YADDUM'],  # Required
+    python_requires='<=3.7',
     install_requires=[
                       'xarray', 
                       'netCDF4', 
                       'matplotlib', 
-                      'pathlib',
-                      'jupyter', 
-                      'rasterio'
+                      'jupyter',
+                      'pylint'
                       ]
 )

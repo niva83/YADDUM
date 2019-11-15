@@ -1,5 +1,5 @@
 package:
-  name: 'YADDUM'
+  name: 'yaddum'
   version: '0.1.0'
 
 source:
@@ -13,16 +13,14 @@ build:
 requirements:
   run:
     - xarray
+    - netCDF4
+    - matplotlib
     - jupyter
     - pylint
-    - python >=3.7
+    - python <=3.7
   host:
     - python
     - setuptools
 test:
   imports:
     - YADDUM
-
-
-
-
