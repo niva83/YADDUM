@@ -13,4 +13,7 @@ But we don't want either of that, we want reproducible and reusable results whic
 <br><br> This project is focused on delivering a simple yet effective dual-Doppler uncertainty model. It is based on the work of Michael Courtney and myself which has been presented on several occasions, e.g. :
 <br> https://zenodo.org/record/1441178
 
-<br> I use Python, since I believe that researchers and developers should not be enchained in commercial development environments such as Matlab or Mathematica which rip profit from the hard working people.
+Until the package becomes available through DTU conda chanel you can temporarily get it via Anaconda:
+```
+conda install -c nikola_v yaddum
+```
