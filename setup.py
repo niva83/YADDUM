@@ -1,7 +1,6 @@
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 from os import path
-
 here = path.abspath(path.dirname(__file__))
 
 
@@ -14,9 +13,9 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
 
-    name='YADDUM',  # Required
+    name='yaddum',  # Required
     version='0.1.0',  # Required
-    description='Python library for dual-Doppler uncertainty assessment',  # Optional
+    description='Yet Another Dual-Doppler Uncertainty Model (YADDUM): Python libpackage for dual-Doppler uncertainty assessment',  # Optional
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/niva83/YADDUM',  # Optional
@@ -30,8 +29,8 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
 
-    packages=['YADDUM'],  # Required
-    python_requires='<=3.7',
+    packages=['yaddum'],  # Required
+    python_requires='==3.7',
     install_requires=[
                       'xarray', 
                       'netCDF4', 
