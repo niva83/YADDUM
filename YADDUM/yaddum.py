@@ -41,19 +41,19 @@ def wind_vector_to_los(u,v,w, azimuth, elevation):
             
         Notes
         -----
-        LOS or radial wind speed, :math:`{V_{LOS}}`, is calculated using the 
+        LOS or radial wind speed, :math:`{V_{radial}}`, is calculated using the 
         following mathematical expression:
         
         .. math::
 
-            V_{LOS} = u \sin({\\theta})\cos({\\varphi}) + 
+            V_{radial} = u \sin({\\theta})\cos({\\varphi}) + 
                       v \cos({\\theta})\cos({\\varphi}) + 
                       w\sin({\\varphi})
         
         where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
         elevation angle of the beam, :math:`{u}` is the wind component toward East, 
         :math:`{v}` is the wind component toward North, and :math:`{w}` is the 
-        upward air velocity. The sign of :math:`{V_{LOS}}` is assumed to be 
+        upward air velocity. The sign of :math:`{V_{radial}}` is assumed to be 
         positive if wind aprroaches the instrument, otherwise it is negative.
         """
         # handles both single values as well arrays
@@ -991,22 +991,22 @@ class Uncertainty():
             
         Notes
         --------
-        The radial wind speed uncertainty, :math:`{U_{radial}}`, is calculated 
+        The radial wind speed uncertainty, :math:`{u_{V_{radial}}}`, is calculated 
         using the following mathematical expression:
         
         .. math::
-            U_{radial}^2 = U_{LOS}^2 +
-                           (V_{h} U_{{\\theta}} A_{{\\theta}} )^2 +
-                           (V_{h} U_{{\\varphi}} A_{{\\varphi}} )^2 +
-                           (V_{h} U_{R} A_{R} )^2 
+            u_{V_{radial}}^2 = u_{LOS}^2 +
+                           (V_{h} u_{{\\theta}} A_{{\\theta}} )^2 +
+                           (V_{h} u_{{\\varphi}} A_{{\\varphi}} )^2 +
+                           (V_{h} u_{R} A_{R} )^2 
                         
         
-        where :math:`{U_{LOS}}`, :math:`{U_{{\\theta}}}`, :math:`{U_{{\\varphi}}}`,
-        and :math:`{U_{R}}` are uncertainties for LOS speed estimation, azimuth angle, 
-        elevation angle and range respectively, :math:`{\\theta}` and :math:`{\\varphi}` 
-        are the azimuth and elevation angle of the beam, :math:`{R}` is the range at which a 
-        measurement point is located along the beam, while :math:`{V_{h}}` is the 
-        horizontal wind speed.       
+        where :math:`{u_{LOS}}`, :math:`{u_{{\\theta}}}`, :math:`{u_{{\\varphi}}}`,
+        and :math:`{u_{R}}` are uncertainties for LOS speed estimation, azimuth angle, 
+        elevation angle and range respectively, :math:`{A_{{\\theta}}}`, 
+        :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}` are the uncertainty components
+        gains for azimuth, elevation and range respectively, while :math:`{V_{h}}` 
+        is the horizontal wind speed.
         """
 
         azimuth_gain = self.__calculate_azimuth_gain(instrument_id)
@@ -1056,11 +1056,22 @@ class Uncertainty():
             
         Notes
         --------
-        The dual-Doppler wind speed uncertainty, :math:`{U_{V_{h}}}`, is calculated 
+        The dual-Doppler wind speed uncertainty, :math:`{u_{V_{h}}}`, is calculated 
         using the following mathematical expression:
         
         .. math::
-       
+
+            u_{V_{h}}=\\frac{1}{V_{h} \sin({\\theta}_{1}-{\\theta}_{2})^2} * 
+                      \\biggl((V_{radial_{1}}-V_{radial_{2}}\cos({\\theta}_{1}-{\\theta}_{2}))^{2}u_{V_{radial_{1}}}^{2} + 
+                          
+            (V_{radial_{2}}-V_{radial_{1}}\cos({\\theta}_{1}-{\\theta}_{2}))^{2}u_{V_{radial_{2}}}^{2}\\biggl)^{\\frac{1}{2}}
+
+        where :math:`u_{V_{radial_{1}}}` and :math:`u_{V_{radial_{2}}}` are radial 
+        uncertainties for measurements of radial velocities :math:`{V_{radial_{1}}}`
+        and :math:`{V_{radial_{2}}}` by a dual-Doppler system (e.g., two lidars), 
+        :math:`{\\theta_{1}}` and  :math:`{\\theta_{2}}` are the azimuth angles 
+        of the two intersecting beams at a point of interest, while :math:`{V_{h}}` 
+        is the horizontal wind speed at that point.       
         """
 
         azimuth_1 = self.uncertainty.azimuth.sel(Id = instrument_ids[0]).values
@@ -1098,10 +1109,20 @@ class Uncertainty():
             
         Notes
         --------
-        The dual-Doppler wind speed uncertainty, :math:`{U_{\Theta}}`, is calculated 
+        The dual-Doppler wind speed uncertainty, :math:`{u_{\Theta}}`, is calculated 
         using the following mathematical expression:
         
         .. math::
+
+
+            u_{\Theta}=\\biggl(\\frac{u_{V_{radial_{1}}}^{2}V_{radial_{2}}^{2}+u_{V_{radial_{2}}}^{2}V_{radial_{1}}^{2}}{V_{h}^{4}\sin ({\\theta}_{1}-{\\theta}_{2})^{2}}\\biggl)^{\\frac{1}{2}}
+
+        where :math:`u_{V_{radial_{1}}}` and :math:`u_{V_{radial_{2}}}` are radial 
+        uncertainties for measurements of radial velocities :math:`{V_{radial_{1}}}`
+        and :math:`{V_{radial_{2}}}` by a dual-Doppler system (e.g., two lidars), 
+        :math:`{\\theta_{1}}` and  :math:`{\\theta_{2}}` are the azimuth angles 
+        of the two intersecting beams at a point of interest, while :math:`{V_{h}}` 
+        is the horizontal wind speed at that point.   
        
         """
 
@@ -1146,7 +1167,69 @@ class Uncertainty():
         
         Notes
         -----
-        Insert detail description what's going on here
+        Currently, this method calculates radial and dual-Doppler
+        uncertainty for single (radial uncertainty) or a pair of instruments 
+        (radial + dual-Doppler uncertainty). 
+        
+        The radial wind speed uncertainty, :math:`{u_{V_{radial}}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+            u_{V_{radial}}^2 = u_{LOS}^2 +
+                           (V_{h} u_{{\\theta}} A_{{\\theta}} )^2 +
+                           (V_{h} u_{{\\varphi}} A_{{\\varphi}} )^2 +
+                           (V_{h} u_{R} A_{R} )^2 
+                        
+        
+        where :math:`{u_{LOS}}`, :math:`{u_{{\\theta}}}`, :math:`{u_{{\\varphi}}}`,
+        and :math:`{u_{R}}` are uncertainties for LOS speed estimation, azimuth angle, 
+        elevation angle and range respectively, :math:`{A_{{\\theta}}}`, 
+        :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}` are the uncertainty components
+        gains for azimuth, elevation and range respectively, while :math:`{V_{h}}` 
+        is the horizontal wind speed.
+        
+        The gains :math:`{A_{{\\theta}}}`, :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}`
+        are calculated using the following mathematical expression:
+        
+        .. math::
+            A_{{\\theta}} = \sin({\\theta} -\Theta ) \cos({\\varphi})
+                    
+        .. math::
+            A_{{\\varphi}} = ({\\alpha} \cot({\\varphi})^{2}-1)\cos({\\theta} -\Theta)\sin({\\varphi})
+
+        .. math::
+            A_{R} = \\frac{{\\alpha}}{R} \cos({\\theta} -\Theta)\cos({\\varphi})                            
+        
+        The dual-Doppler wind speed uncertainty, :math:`{u_{V_{h}}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+
+            u_{V_{h}}=\\frac{1}{V_{h} \sin({\\theta}_{1}-{\\theta}_{2})^2} * 
+                      \\biggl((V_{radial_{1}}-V_{radial_{2}}\cos({\\theta}_{1}-{\\theta}_{2}))^{2}u_{V_{radial_{1}}}^{2} + 
+                          
+            (V_{radial_{2}}-V_{radial_{1}}\cos({\\theta}_{1}-{\\theta}_{2}))^{2}u_{V_{radial_{2}}}^{2}\\biggl)^{\\frac{1}{2}}
+
+        where :math:`u_{V_{radial_{1}}}` and :math:`u_{V_{radial_{2}}}` are radial 
+        uncertainties for measurements of radial velocities :math:`{V_{radial_{1}}}`
+        and :math:`{V_{radial_{2}}}` by a dual-Doppler system (e.g., two lidars), 
+        :math:`{\\theta_{1}}` and  :math:`{\\theta_{2}}` are the azimuth angles 
+        of the two intersecting beams at a point of interest, while :math:`{V_{h}}` 
+        is the horizontal wind speed at that point.        
+        
+        The dual-Doppler wind speed uncertainty, :math:`{u_{\Theta}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+
+            u_{\Theta}=\\biggl(\\frac{u_{V_{radial_{1}}}^{2}V_{radial_{2}}^{2}+u_{V_{radial_{2}}}^{2}V_{radial_{1}}^{2}}{V_{h}^{4}\sin ({\\theta}_{1}-{\\theta}_{2})^{2}}\\biggl)^{\\frac{1}{2}}
+
+        where :math:`u_{V_{radial_{1}}}` and :math:`u_{V_{radial_{2}}}` are radial 
+        uncertainties for measurements of radial velocities :math:`{V_{radial_{1}}}`
+        and :math:`{V_{radial_{2}}}` by a dual-Doppler system (e.g., two lidars), 
+        :math:`{\\theta_{1}}` and  :math:`{\\theta_{2}}` are the azimuth angles 
+        of the two intersecting beams at a point of interest, while :math:`{V_{h}}` 
+        is the horizontal wind speed at that point.          
         """
         # Check if lidar_ids are correct if not exit
         if not(isinstance(instrument_ids, list)):
