@@ -1,7 +1,7 @@
-YADDUM
+yaddum
 ======
 
 .. toctree::
    :maxdepth: 4
 
-   YADDUM
+   yaddum

@@ -1,13 +1,13 @@
-YADDUM package
+yaddum package
 ==============
 
 Submodules
 ----------
 
-YADDUM.YADDUM module
+yaddum.yaddum module
 --------------------
 
-.. automodule:: YADDUM.YADDUM
+.. automodule:: yaddum.yaddum
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ YADDUM.YADDUM module
 Module contents
 ---------------
 
-.. automodule:: YADDUM
+.. automodule:: yaddum
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,4 +1,4 @@
-"""This is Python package for dual-Doppler uncertainty assessment.
+"""This is a Python package for dual-Doppler uncertainty assessment.
 It includes a single class which is used to perform the assessment.
 
 """
@@ -38,7 +38,23 @@ def wind_vector_to_los(u,v,w, azimuth, elevation):
             nD array `float` or `int` corresponding to LOS component of wind.
             In cf convention w is radial_velocity_of_scatterers_toward_instrument.
             Units m/s.
-					
+            
+        Notes
+        -----
+        LOS or radial wind speed, :math:`{V_{LOS}}`, is calculated using the 
+        following mathematical expression:
+        
+        .. math::
+
+            V_{LOS} = u \sin({\\theta})\cos({\\varphi}) + 
+                      v \cos({\\theta})\cos({\\varphi}) + 
+                      w\sin({\\varphi})
+        
+        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
+        elevation angle of the beam, :math:`{u}` is the wind component toward East, 
+        :math:`{v}` is the wind component toward North, and :math:`{w}` is the 
+        upward air velocity. The sign of :math:`{V_{LOS}}` is assumed to be 
+        positive if wind aprroaches the instrument, otherwise it is negative.
         """
         # handles both single values as well arrays
         azimuth = np.radians(azimuth)
@@ -72,6 +88,10 @@ def generate_mesh(center, map_extent, mesh_res):
         nD shaped array for Easting (x) coordinate of mesh points.
     y : ndarray
         nD shaped array for Northing (y) coordinate of mesh points.
+        
+    Notes
+    -----
+    The generated mesh will be squared, i.e. having the same length in both dimensions.
     """
     map_corners = np.array([center[:2] - int(map_extent), 
                             center[:2] + int(map_extent)])
@@ -106,10 +126,8 @@ def generate_beam_coords(lidar_pos, meas_pt_pos):
     beam_coords : ndarray
         nD array containing beam steering coordinates for given measurement points.
         Coordinates have following structure [azimuth, elevation, range].
-        Azimuth and elevation unit degree.
-        Range unit meter.
-        
-    
+        Azimuth and elevation angles are given in degree.
+        Range unit is meter.
     """
     # testing if  meas_pt has single or multiple measurement points
     if len(meas_pt_pos.shape) == 2:
@@ -270,7 +288,7 @@ class Uncertainty():
             String indicating instrument category (e.g., lidar, radar, etc.).
             Default value is set to 'lidar'.
 
-        Keyword Arguments
+        Other Parameters
         -----------------
         U_los : float, optional
             Uncertainty in estimating radial velocity from Doppler spectra.
@@ -284,21 +302,25 @@ class Uncertainty():
         U_elevation : float, optional
             Uncertainty in the beam steering for the elevation angle.
             Unless provided, (default) value is set to 0.1 deg.
+        
+        Raises
+        ------
+        InappropriatePosition
+            If the provided position of instrument is not properly provided.
 
         Notes
         --------
         Instruments can be add one at time.
         Currently only the instrument position in UTM coordinate system is supported.
 
-        Todo
+        TODO
         ----
-        - Adds suport 
         - Support the instrument position in coordinate systems other than UTM
         - Integrate e-WindLidar attributes and vocabulary for lidar type
         """
         if not(self.__check_instrument_position(position)):
-            raise ValueError("Incorrect position of the instrument!")
-            
+            raise ValueError("InappropriatePosition")
+        
             
 
         instrument_dict = {instrument_id:{
@@ -330,21 +352,28 @@ class Uncertainty():
         instrument_id : str, required
             String which identifies instrument in the instrument dictionary.
 
-        Keyword Arguments
+        Other Parameters
         -----------------
         U_los : float, optional
             Uncertainty in estimating radial velocity from Doppler spectra.
             Unless provided, (default) value is set to 0.1 m/s.
         U_range : float, optional
             Uncertainty in detecting range at which atmosphere is probed.
-            Unless provided, (default) value is set to 1 m.
+            Unless provided, (default) value is set to 1 meter.
         U_azimuth : float, optional
             Uncertainty in the beam steering for the azimuth angle.
-            Unless provided, (default) value is set to 0.1 deg.
+            Unless provided, (default) value is set to 0.1 degree.
         U_elevation : float, optional
             Uncertainty in the beam steering for the elevation angle.
-            Unless provided, (default) value is set to 0.1 deg.
-        
+            Unless provided, (default) value is set to 0.1 degree.
+            
+        Raises
+        ------
+        WrongId
+            If for the provided instrument_id there is no key in the dictionary.
+        WrongKwargs
+            If one or more kwargs are incorrect.
+                  
         Notes
         -----
         If end-user manually updates keys essential for uncertainty calculation
@@ -352,15 +381,15 @@ class Uncertainty():
         Therefore, to update uncertainty values end-user must re-execute 
         calculate_uncertainty method.
 
-        Todo
+        TODO
         ----
         - If certain keys are changes/updated trigger the uncertainty re-calc.
         """
         if instrument_id not in self.instruments:
-            raise ValueError(instrument_id + " does not exist in the dictionary!")
+            raise ValueError("WrongId")
 
         if (len(kwargs) > 0 and not(set(kwargs).issubset(self.__KWARGS))):
-            raise ValueError("One or more kwargs are incorrect!")
+            raise ValueError("WrongKwargs")
 
         if (len(kwargs) > 0 and set(kwargs).issubset(self.__KWARGS)):             
             for key in kwargs:
@@ -380,8 +409,13 @@ class Uncertainty():
         model : str, required
             This is a string describing which atmospheric model is used.
         model_parameters : dict, required
-            This is a dictionary which contains parameters which detailing 
-            the atmospheric model of choice.
+            This is a dictionary which contains parameters which detail 
+            the selected atmospheric model.
+            
+        Raises
+        ------
+        UnsupportedModel
+            If the selected model is not supported by the package.
         
         Notes
         -----
@@ -390,14 +424,14 @@ class Uncertainty():
         Python dictionary: horizontal speed, wind direction, shear exponent and
         reference height for horizontal speed.
 
-        Todo
+        TODO
         ----
         - Support other atmospheric models (e.g., log wind profile) 
 
         """
 
         if (model != 'power_law'):
-            raise ValueError("Currently YADDUM only supports power law model!")
+            raise ValueError("UnsupportedModel")
 
         if ('wind_speed' in model_parameters
             and model_parameters['wind_speed'] is not None
@@ -440,10 +474,6 @@ class Uncertainty():
         else:
             print('Incorrect parameters for power law model!')
 
-
-    # def update_atmosphere(self, atmosphere_id, **kwargs):
-    #     pass
-
     def add_measurements(self, measurements_id, category='points', **kwargs):
         """
         Adds desired measurement positions to the measurements dictionary.
@@ -458,42 +488,53 @@ class Uncertainty():
             This paremeter can be either equal to 'points' or 'horizontal_mesh'.
             Default value is set to 'points'.
 
-        Keyword Arguments
+        Other Parameters
         -----------------
         positions : ndarray
             nD array containing data with `float` or `int` type corresponding 
             to Northing, Easting and Height coordinates of the measurement pts.
             nD array data are expressed in meters.
-            This kwarg is required if category = 'points'
+            This kwarg is required if category=='points'
         mesh_center : ndarray
             nD array containing data with `float` or `int` type
             corresponding to Northing, Easting and height of the mesh center.
             nD array data are expressed in meters.
-            This kwarg is required if category = 'horizontal_mesh'.
+            This kwarg is required if category=='horizontal_mesh'.
         extent : int
             mesh extent in Northing and Easting in meters.
-            This kwarg is required if category = 'horizontal_mesh'.
+            This kwarg is required if category=='horizontal_mesh'.
         resolution : int
             mesh resolution in meters.
-            This kwarg is required if category = 'horizontal_mesh'.
-
-        Todo
+            This kwarg is required if category=='horizontal_mesh'.
+        
+        Raises
+        ------
+        UnsupportedCategory
+            If the category of measurement points is not supported.
+        PositionsMissing
+            If category=='points' but the position of points is not provided.
+        InappropriatePositions
+            If the provided points positions are not properly provided.
+        MissingKwargs
+            If one or more kwargs are missing.
+                        
+        TODO
         ----
         - Accept other categories such as LOS, PPI, RHI, VAD and DBS
         """
         if category not in {'points', 'horizontal_mesh'}:
-            raise ValueError("This category does not exist!")
+            raise ValueError("UnsupportedCategory")
 
         if category == 'points' and 'positions' not in kwargs:
-            raise ValueError("Missing \'positions\' kwarg!")
+            raise ValueError("PositionsMissing")
 
         if (category == 'points' and 
             'positions' in kwargs and 
             not(self.__check_measurement_positions(kwargs['positions']))):
-            raise ValueError("Incorrect positions of measurement points!")     
+            raise ValueError("InappropriatePositions")     
         
         if category == 'horizontal_mesh' and set(kwargs) != {'resolution','mesh_center', 'extent'}:            
-           raise ValueError("One or several kwargs are missing!")
+           raise ValueError("MissingKwargs")
             
         if category == 'points':
             measurements_dict = {measurements_id : 
@@ -530,6 +571,40 @@ class Uncertainty():
     
     def __create_wind_ds(self, atmosphere, measurements, 
                             u, v, w, wind_speed, wind_direction):
+        """
+        Creates wind field xarray object.
+        
+        Parameters
+        ----------
+        atmosphere : dict
+            Dictionary containing information on atmosphere.
+        measurements : dict
+            Dictionary containing information on measurements.
+        u : ndarray
+            nD array of `float` or `int` corresponding to u component of wind.
+            In cf convention v is eastward_wind.
+            Units m/s.
+        v : ndarray
+            nD array `float` or `int` corresponding to v component of wind.
+            In cf convention v is northward_wind.
+            Units m/s.
+        w : ndarray
+            nD array `float` or `int` corresponding to w component of wind.
+            In cf convention w is upward_air_velocity.
+            Units m/s.            
+        wind_speed : ndarray
+            nD array `float` or `int` corresponding to the wind speed.
+            Units m/s.
+        wind_direction : ndarray
+            nD array `float` or `int` corresponding to the wind direction.
+            Units degree.            
+                        
+        Notes
+        ----
+        Currently this method only supports points and horizontal mesh data structures.
+        The method is inline with the cf convention for variable naming.
+        """
+        
         
         positions = measurements['positions']
         category = measurements['category']
@@ -571,7 +646,27 @@ class Uncertainty():
         self.wind_field.Height.attrs['units'] = 'm'          
 
     def __create_rad_ds(self, instrument_id, measurements):
+        """
+        Creates radial wind speed uncertainty xarray object.
         
+        Parameters
+        ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
+        measurements : dict
+            Dictionary containing information on measurements.
+            
+        
+        Returns
+        -------
+        ds : xarray
+            xarray dataset containing radial wind speed uncertainty.
+                        
+        Notes
+        ----
+        Currently this method only supports points and horizontal mesh data structures.
+        The method can be called only when the radial uncertainty has been calculated.
+        """
         positions = measurements['positions']
         category = measurements['category']
         inherited_uncertainty = self.instruments[instrument_id]['inherited_uncertainty']
@@ -644,15 +739,34 @@ class Uncertainty():
     
 
     def __create_dd_ds(self, measurements):
+        """
+        Creates dual-Doppler uncertainty xarray object.
+        
+        Parameters
+        ----------
+        measurements : dict
+            Dictionary containing information on measurements.
+            
+        
+        Returns
+        -------
+        ds : xarray
+            xarray dataset containing dual-Doppler uncertainty.
+                        
+        Notes
+        ----
+        Currently this method only supports points and horizontal mesh data structures.
+        The method can be called only when the dual-Doppler uncertainty has been calculated.
+        """
         
         positions = measurements['positions']
         category = measurements['category']
         
         if category == 'points':
             ds = xr.Dataset({'wind_speed_uncertainty':(['point'], 
-                                                       self.wind_speed_uncertainty),
+                                                       self.__wind_speed_uncertainty),
                              'wind_from_direction_uncertainty':(['point'], 
-                                                                self.wind_direction_uncertainty),
+                                                                self.__wind_direction_uncertainty),
                             },
                             coords={'Easting':(['point'], positions[:,0]),
                                     'Northing':(['point'], positions[:,1]),
@@ -661,8 +775,8 @@ class Uncertainty():
             
         
         if category == 'horizontal_mesh':
-            ds = xr.Dataset({'wind_speed_uncertainty':(['Northing', 'Easting'], self.wind_speed_uncertainty),
-                             'wind_from_direction_uncertainty':(['Northing', 'Easting'], self.wind_direction_uncertainty),
+            ds = xr.Dataset({'wind_speed_uncertainty':(['Northing', 'Easting'], self.__wind_speed_uncertainty),
+                             'wind_from_direction_uncertainty':(['Northing', 'Easting'], self.__wind_direction_uncertainty),
                             },
                             coords={'Easting': np.unique(positions[:,0]), 
                                     'Northing': np.unique(positions[:,1]),
@@ -672,7 +786,21 @@ class Uncertainty():
 
     @staticmethod
     def __update_metadata(ds, uncertainty_model):
+        """
+        Updates xarray dataset with metadata.
         
+        Parameters
+        ----------
+        ds : xarray
+            xarray dataset containing radial and/or dual-Doppler uncertainty.        
+        uncertainty_model : str
+            String indicating which uncertainty model was used for the uncertainty calculation.
+        
+        Returns
+        -------
+        ds : xarray
+            xarray dataset updated with metadata. 
+        """        
         # Update of metadata here
         ds.attrs['title'] = 'Radial speed uncertainty'
         ds.attrs['convention'] = 'cf'
@@ -699,7 +827,7 @@ class Uncertainty():
 
     def __calculate_wind(self, measurements_id, atmosphere_id):
         """
-        Calculates wind characteristics at measurement points. 
+        Calculates wind characteristics at the selected measurement points. 
 
         
         Parameters
@@ -708,12 +836,7 @@ class Uncertainty():
             String which identifies measurements instance in the dictionary.
         atmosphere_id : str, required
             String which identifies atmosphere instance in the dictionary which
-            is used to calculate wind vector at measurement points
-        
-        Todo
-        ----
-        - Add attributes to xarray dataset (atmosphere pars, units, title, etc.)
-            
+            is used to calculate wind vector at measurement points    
         """        
         atmosphere = self.atmosphere[atmosphere_id]
         measurements = self.measurements[measurements_id]
@@ -733,19 +856,29 @@ class Uncertainty():
 
     def __calculate_azimuth_gain(self, instrument_id):
         """
-        Description of method
+        Calculates the gain for the azimuth component of the radial uncertainty.
         
         Parameters
         ----------
-        
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
+            
         Returns
         -------
+        gain : ndarray
+            nD array of azimuth gains for each measurement point.
         
         Notes
         --------
-
-        References
-        ----------
+        The azimuth gain, :math:`{A_{{\\theta}}}`, is calculated using the 
+        following mathematical expression:
+        
+        .. math::
+            A_{{\\theta}} = \sin({\\theta} -\Theta ) \cos({\\varphi})
+        
+        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
+        elevation angle of the beam, while :math:`{\Theta}` is the wind direction.
+       
         """
         # Pull wind direction from xarray object and 
         # unwrap it to secure it is a 1D array.
@@ -757,23 +890,33 @@ class Uncertainty():
                 np.cos(np.radians(coords[:,1])))
         
         return gain
-
-
+    
     def __calculate_elevation_gain(self, instrument_id):
         """
-        Description of method
+        Calculates the gain for the elevation component of the radial uncertainty.
         
         Parameters
         ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
         
         Returns
         -------
-        
+        gain : ndarray
+            nD array of elevation gains for each measurement point.
+                    
         Notes
         --------
-
-        References
-        ----------
+        The elevation gain, :math:`{A_{{\\varphi}}}`, is calculated using the 
+        following mathematical expression:
+        
+        .. math::
+            A_{{\\varphi}} = ({\\alpha} \cot({\\varphi})^{2}-1)\cos({\\theta} -\Theta)\sin({\\varphi})
+        
+        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
+        elevation angle of the beam, :math:`{\Theta}` is the wind direction, 
+        while :math:`{\\alpha}` is the wind shear exponent.
+       
         """
 
         coords = self.__probing_dict[instrument_id]
@@ -790,19 +933,31 @@ class Uncertainty():
 
     def __calculate_range_gain(self, instrument_id):
         """
-        Description of method
+        Calculates the gain for the range component of the radial uncertainty.
         
         Parameters
         ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
         
         Returns
         -------
-        
+        gain : ndarray
+            nD array of range gains for each measurement point.
+                    
         Notes
         --------
-
-        References
-        ----------
+        The range gain, :math:`{A_{R}}`, is calculated using the 
+        following mathematical expression:
+        
+        .. math::
+            A_{R} = \\frac{{\\alpha}}{R} \cos({\\theta} -\Theta)\cos({\\varphi})
+        
+        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
+        elevation angle of the beam, :math:`{\Theta}` is the wind direction, 
+        :math:`{\\alpha}` is the wind shear exponent, while :math:`{R}` is 
+        the range at which a measurement point is located along the beam.
+       
         """
 
         coords = self.__probing_dict[instrument_id]
@@ -821,19 +976,37 @@ class Uncertainty():
 
     def __calculate_radial_uncertainty(self, instrument_id):
         """
-        Description of method
+        Calculates the radial wind speed uncertainty.
         
         Parameters
         ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
         
         Returns
         -------
-        
+        dict_out : dict
+            Dictionary containing selected uncertainty model, calculated radial 
+            uncertainty and gains for each individual uncertainty component.
+            
         Notes
         --------
-
-        References
-        ----------
+        The radial wind speed uncertainty, :math:`{U_{radial}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+            U_{radial}^2 = U_{LOS}^2 +
+                           (V_{h} U_{{\\theta}} A_{{\\theta}} )^2 +
+                           (V_{h} U_{{\\varphi}} A_{{\\varphi}} )^2 +
+                           (V_{h} U_{R} A_{R} )^2 
+                        
+        
+        where :math:`{U_{LOS}}`, :math:`{U_{{\\theta}}}`, :math:`{U_{{\\varphi}}}`,
+        and :math:`{U_{R}}` are uncertainties for LOS speed estimation, azimuth angle, 
+        elevation angle and range respectively, :math:`{\\theta}` and :math:`{\\varphi}` 
+        are the azimuth and elevation angle of the beam, :math:`{R}` is the range at which a 
+        measurement point is located along the beam, while :math:`{V_{h}}` is the 
+        horizontal wind speed.       
         """
 
         azimuth_gain = self.__calculate_azimuth_gain(instrument_id)
@@ -869,19 +1042,25 @@ class Uncertainty():
 
     def __calculate_DD_speed_uncertainty(self, instrument_ids):
         """
-        Description of method
+        Calculates the dual-Doppler wind speed uncertainty.
         
         Parameters
         ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
         
         Returns
         -------
-        
+        uncertainty : ndarray
+            nD array of calculated dual-Doppler wind speed uncertainty.
+            
         Notes
         --------
-
-        References
-        ----------
+        The dual-Doppler wind speed uncertainty, :math:`{U_{V_{h}}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+       
         """
 
         azimuth_1 = self.uncertainty.azimuth.sel(Id = instrument_ids[0]).values
@@ -905,19 +1084,25 @@ class Uncertainty():
     
     def __calculate_DD_direction_uncertainty(self, instrument_ids):
         """
-        Description of method
+        Calculates the dual-Doppler wind direction uncertainty.
         
         Parameters
         ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
         
         Returns
         -------
-        
+        uncertainty : ndarray
+            nD array of calculated dual-Doppler wind speed uncertainty.
+            
         Notes
         --------
-
-        References
-        ----------
+        The dual-Doppler wind speed uncertainty, :math:`{U_{\Theta}}`, is calculated 
+        using the following mathematical expression:
+        
+        .. math::
+       
         """
 
         azimuth_1 = self.uncertainty.azimuth.sel(Id = instrument_ids[0]).values
@@ -958,6 +1143,10 @@ class Uncertainty():
         uncertainty_model : str, optional
             String defining uncertainty model used for uncertainty calculations.
             default value set to 'radial_uncertainty'
+        
+        Notes
+        -----
+        Insert detail description what's going on here
         """
         # Check if lidar_ids are correct if not exit
         if not(isinstance(instrument_ids, list)):
@@ -1027,8 +1216,8 @@ class Uncertainty():
             if len(instrument_ids) != 2:
                 raise ValueError('instrument_ids must contain exactly two ids!')
             
-            self.wind_speed_uncertainty = self.__calculate_DD_speed_uncertainty(instrument_ids)
-            self.wind_direction_uncertainty = self.__calculate_DD_direction_uncertainty(instrument_ids)
+            self.__wind_speed_uncertainty = self.__calculate_DD_speed_uncertainty(instrument_ids)
+            self.__wind_direction_uncertainty = self.__calculate_DD_direction_uncertainty(instrument_ids)
             ds_temp = self.__create_dd_ds(measurements)
             self.uncertainty = xr.merge([self.uncertainty, ds_temp])
             self.uncertainty = self.__update_metadata(self.uncertainty, 'dual-Doppler')
