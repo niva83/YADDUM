@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../yaddum'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Yet Another Dual-Doppler Uncertainty Model (YADDUM)'
+project = 'YADDUM'
 copyright = '2019, Nikola Vasiljevic'
 author = 'Nikola Vasiljevic'
 
