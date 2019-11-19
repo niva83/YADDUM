@@ -326,7 +326,7 @@ class Uncertainty():
         instrument_dict = {instrument_id:{
                                             'category': category,
                                             'position': position,
-                                            'inherited_uncertainty':{
+                                            'intrinsic_uncertainty':{
                                                 'U_los' : 0.1,     # default
                                                 'U_range' : 1,     # default
                                                 'U_azimuth': 0.1,  # default
@@ -394,7 +394,7 @@ class Uncertainty():
         if (len(kwargs) > 0 and set(kwargs).issubset(self.__KWARGS)):             
             for key in kwargs:
                 if key in {'U_los', 'U_range', 'U_azimuth', 'U_elevation'}:
-                    self.instruments[instrument_id]['inherited_uncertainty'][key] = kwargs[key]
+                    self.instruments[instrument_id]['intrinsic_uncertainty'][key] = kwargs[key]
 
 
     def add_atmosphere(self, atmosphere_id, model, model_parameters):
@@ -669,7 +669,7 @@ class Uncertainty():
         """
         positions = measurements['positions']
         category = measurements['category']
-        inherited_uncertainty = self.instruments[instrument_id]['inherited_uncertainty']
+        intrinsic_uncertainty = self.instruments[instrument_id]['intrinsic_uncertainty']
         
         if category == 'points':
             prob_cord = self.__probing_dict[instrument_id]
@@ -687,7 +687,7 @@ class Uncertainty():
                             'elevation_gain':(['Id','point'], np.array([elevation_gain])),                            
                             'range_gain':(['Id','point'], np.array([range_gain.T])),
                             'radial_speed_uncertainty':(['Id','point'], np.array([U_radial])),
-                            # 'instrument_uncertainty':(['Id'], np.array([inherited_uncertainty]))
+                            # 'instrument_uncertainty':(['Id'], np.array([intrinsic_uncertainty]))
                             },
                             coords={'Easting':(['point'], positions[:,0]),
                                     'Northing':(['point'], positions[:,1]),
@@ -724,7 +724,7 @@ class Uncertainty():
                                           np.array([range_gain.T])),
                             'radial_speed_uncertainty':(['Id', 'Northing', 'Easting'], 
                                                         np.array([U_radial.T])),
-                            'inherited_uncertainty':(['Id'], np.array([inherited_uncertainty]))                                                                                    
+                            'intrinsic_uncertainty':(['Id'], np.array([intrinsic_uncertainty]))                                                                                    
                             },
                             coords={'Easting': np.unique(positions[:,0]), 
                                     'Northing': np.unique(positions[:,1]),
@@ -1013,11 +1013,11 @@ class Uncertainty():
         elevation_gain = self.__calculate_elevation_gain(instrument_id)
         range_gain = self.__calculate_range_gain(instrument_id)
 
-        # Pulling inherited uncertainties from the lidar dictionary
-        U_azimuth = self.instruments[instrument_id]['inherited_uncertainty']['U_azimuth']
-        U_elevation = self.instruments[instrument_id]['inherited_uncertainty']['U_elevation']
-        U_range = self.instruments[instrument_id]['inherited_uncertainty']['U_range']
-        U_los = self.instruments[instrument_id]['inherited_uncertainty']['U_los']
+        # Pulling intrinsic uncertainties from the lidar dictionary
+        U_azimuth = self.instruments[instrument_id]['intrinsic_uncertainty']['U_azimuth']
+        U_elevation = self.instruments[instrument_id]['intrinsic_uncertainty']['U_elevation']
+        U_range = self.instruments[instrument_id]['intrinsic_uncertainty']['U_range']
+        U_los = self.instruments[instrument_id]['intrinsic_uncertainty']['U_los']
         
         # Pulling horizontal wind speed from the measurements dictionary
         wind_speed = self.wind_field.wind_speed.values.T.reshape(-1)
