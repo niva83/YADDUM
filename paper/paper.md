@@ -20,7 +20,7 @@ bibliography: paper.bib
 ---
 
 # Summary & Purpose
-SHo
+
 
 ## YADDUM Audience
 
