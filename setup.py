@@ -14,7 +14,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
 
     name='yaddum',  # Required
-    version='0.1.0',  # Required
+    version='0.1.1',  # Required
     description='Yet Another Dual-Doppler Uncertainty Model (YADDUM): Python libpackage for dual-Doppler uncertainty assessment',  # Optional
     long_description=long_description,
     long_description_content_type='text/markdown',
