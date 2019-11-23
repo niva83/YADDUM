@@ -5,16 +5,6 @@ import xarray as xr
 
 lidar_uncertainty = yaddum.Uncertainty()
 
-
-lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh', 
-                                   resolution = 10, 
-                                   mesh_center = np.array([0,0,100]), 
-                                   extent = 5000)
-
-lidar_uncertainty.add_measurements('pts', 'points', 
-                                  positions = )
-
-
 model_pars={'wind_speed':10,
             'upward_air_velocity':0,
             'wind_from_direction':0,
@@ -22,6 +12,15 @@ model_pars={'wind_speed':10,
             'shear_exponent':0.2}
 lidar_uncertainty.add_atmosphere('pl_1', 'power_law', model_pars)
 
+
+lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh', 
+                                   resolution = 10, 
+                                   mesh_center = np.array([0,0,100]), 
+                                   extent = 5000)
+
+points = np.array([[500,-500,100], [1000,2,300]])
+
+lidar_uncertainty.add_measurements('pts', 'points', positions = points)
 
 
 uncertainty_pars = {'u_estimation':0.1,
