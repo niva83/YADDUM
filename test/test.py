@@ -9,10 +9,10 @@ lidar_uncertainty = yaddum.Uncertainty()
 lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh', 
                                    resolution = 10, 
                                    mesh_center = np.array([0,0,100]), 
-                                   extent = 1000)
+                                   extent = 5000)
 
 lidar_uncertainty.add_measurements('pts', 'points', 
-                                  positions = np.array([[500,-500,100], [1000,2,300]]))
+                                  positions = )
 
 
 model_pars={'wind_speed':10,
@@ -32,8 +32,9 @@ uncertainty_pars = {'u_estimation':0.1,
 lidar_pos_1 = np.array([0,0,0])
 lidar_pos_2 = np.array([1000,1000,0])
 
-lidar_uncertainty.add_instrument('koshava', lidar_pos_1, **uncertainty_pars)
-lidar_uncertainty.add_instrument('whittle', lidar_pos_2, **uncertainty_pars)
+
+lidar_uncertainty.add_lidar('koshava', lidar_pos_1, **uncertainty_pars)
+lidar_uncertainty.add_lidar('whittle', lidar_pos_2, **uncertainty_pars)
 
 lidar_uncertainty.calculate_uncertainty(['koshava', 'whittle'], 'mesh', 'pl_1', 
                                         uncertainty_model='dual-Doppler')

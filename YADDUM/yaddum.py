@@ -163,7 +163,7 @@ def generate_beam_coords(lidar_pos, meas_pt_pos):
 
     return beam_coord
 
-class Atmosphere():
+class Atmosphere:
     """
     A class containing methods and attributes related to atmosphere.
 
@@ -269,7 +269,7 @@ class Measurements(Atmosphere):
         Atmosphere.__init__(self)
 
     @staticmethod
-    def __check_measurement_positions(measurement_positions):
+    def check_measurement_positions(measurement_positions):
         """
         Validates the measurement position
         
@@ -286,7 +286,7 @@ class Measurements(Atmosphere):
 
         See also
         --------
-        add_instruments() : adds an instrument to the instrument dictionary 
+        add_measurements() : adds measurements to the measurement dictionary
 
         """        
         if(type(measurement_positions).__module__ == np.__name__):
@@ -303,7 +303,8 @@ class Measurements(Atmosphere):
             # print('Measurement positions were not added!')
             return False
 
-    def add_measurements(self, measurements_id, category='points', **kwargs):
+    def add_measurements(self, measurements_id, 
+                         category='points', utm_zone = '', **kwargs):
         """
         Adds desired measurement positions to the measurements dictionary.
         The measurement points are used for the uncertainty calculation.
@@ -316,6 +317,9 @@ class Measurements(Atmosphere):
             Indicates category of measurements that are added to the dictionary.
             This paremeter can be either equal to 'points' or 'horizontal_mesh'.
             Default value is set to 'points'.
+        utm_zone : str, optional
+            Indicates UTM zone in which points are located.
+            Default values is set to None.
 
         Other Parameters
         -----------------
@@ -359,7 +363,7 @@ class Measurements(Atmosphere):
 
         if (category == 'points' and 
             'positions' in kwargs and 
-            not(self.__check_measurement_positions(kwargs['positions']))):
+            not(self.check_measurement_positions(kwargs['positions']))):
             raise ValueError("InappropriatePositions")     
         
         if category == 'horizontal_mesh' and set(kwargs) != {'resolution','mesh_center', 'extent'}:            
@@ -502,14 +506,9 @@ class Measurements(Atmosphere):
         self.__create_wind_ds(atmosphere, measurements, 
                               u, v, w, wind_speed, wind_from_direction)                                
 
-class Instruments():
+class Instruments:
     """
-    A class containing methods and attributes related to instruments.
-
-    Methods
-    -------
-    add_instrument(instrument_id, position, category, **kwargs):
-        Adds an instrument to the instrument dictionary.
+    A class containing basic methods to operate on instruments dictionary.
     """    
     __KWARGS = {'uncertainty_model',
                 'u_estimation', 
@@ -531,80 +530,35 @@ class Instruments():
         
     def __init__(self):
         self.instruments = {}
-
-    def add_instrument(self, instrument_id, position, 
-                       category="wind_lidar", **kwargs):
+        
+    @staticmethod
+    def check_instrument_position(instrument_position):
         """
-        Adds an instrument to the instrument dictionary.
+        Validates the position of instrument
         
         Parameters
         ----------
-        instrument_id : str, required
-            String which identifies instrument in the instrument dictionary.
-        position : ndarray, required
-            nD array containing data with `float` or `int` type corresponding 
-            to Northing, Easting and Height coordinates of the instrument.
+        instrument_position : ndarray
+            nD array containing data with `float` or `int` type
+            corresponding to x, y and z coordinates of a lidar.
             nD array data are expressed in meters.
-        category : str, optional
-            String indicating instrument category (e.g., wind lidar, radar, etc.).
-            Default value is set to 'wind_lidar'.
-
-        Other Parameters
-        -----------------
-        u_estimation : float, optional
-            Uncertainty in estimating radial velocity from Doppler spectra.
-            Unless provided, (default) value is set to 0.1 m/s.
-        u_range : float, optional
-            Uncertainty in detecting range at which atmosphere is probed.
-            Unless provided, (default) value is set to 1 m.
-        u_azimuth : float, optional
-            Uncertainty in the beam steering for the azimuth angle.
-            Unless provided, (default) value is set to 0.1 deg.
-        u_elevation : float, optional
-            Uncertainty in the beam steering for the elevation angle.
-            Unless provided, (default) value is set to 0.1 deg.
         
-        Raises
-        ------
-        InappropriatePosition
-            If the provided position of instrument is not properly provided.
+        Returns
+        -------
+            True / False
+        """        
+        if(type(instrument_position).__module__ == np.__name__):
+                if (len(instrument_position.shape) == 1 
+                    and instrument_position.shape[0] == 3):
+                        return True
+                else:
+                    # print('Wrong dimensions! Must be == 3 !')
+                    return False
+        else:
+            # print('Input is not numpy array!')
+            return False        
 
-        Notes
-        --------
-        Instruments can be add one at time.
-        Currently only the instrument position in UTM coordinate system is supported.
-
-        TODO
-        ----
-        - Support the instrument position in coordinate systems other than UTM
-        - Integrate e-WindLidar attributes and vocabulary for lidar type
-        """
-        if not(self.__check_instrument_position(position)):
-            raise ValueError("InappropriatePosition")
-        
-            
-
-        instrument_dict = {instrument_id:{
-                                            'category': category,
-                                            'position': position,
-                                            'intrinsic_uncertainty':{
-                                                'u_estimation' : 0.1,     # default
-                                                'u_range' : 1,     # default
-                                                'u_azimuth': 0.1,  # default
-                                                'u_elevation': 0.1 # default
-                                                }
-                                         }
-                         }
-            
-        self.instruments.update(instrument_dict)
-        self.__update_instrument(instrument_id, **kwargs)
-        print('Instrument \'' + instrument_id + '\' of category \'' + 
-              category +'\' added to the instrument dictionary, ' + 
-              'which now contains ' + str(len(self.instruments)) + 
-              ' instrument(s).')
-
-
-    def __update_instrument(self, instrument_id, **kwargs):
+    def update_instrument(self, instrument_id, **kwargs):
         """
         Updates a instrument instance in dictionary with information in kwargs.
         
@@ -657,35 +611,91 @@ class Instruments():
                 if key in {'u_estimation', 'u_range', 'u_azimuth', 'u_elevation'}:
                     self.instruments[instrument_id]['intrinsic_uncertainty'][key] = kwargs[key]    
     
-    @staticmethod
-    def __check_instrument_position(instrument_position):
+                
+class Lidars(Instruments):
+    """
+    A class containing methods and attributes related to wind lidars.
+    
+    Methods
+    -------
+    add_lidar(instrument_id, position, category, **kwargs):
+        Adds a lidar instance to the instrument dictionary.        
+    """
+    def __init__(self):
+        super().__init__()        
+        
+    def add_lidar(self, instrument_id, position, **kwargs):
         """
-        Validates the position of instrument
+        Adds a lidar instance to the instrument dictionary.
         
         Parameters
         ----------
-        instrument_position : ndarray
-            nD array containing data with `float` or `int` type
-            corresponding to x, y and z coordinates of a lidar.
+        instrument_id : str, required
+            String which identifies instrument in the instrument dictionary.
+        position : ndarray, required
+            nD array containing data with `float` or `int` type corresponding 
+            to Northing, Easting and Height coordinates of the instrument.
             nD array data are expressed in meters.
+            
+        Other Parameters
+        -----------------
+        u_estimation : float, optional
+            Uncertainty in estimating radial velocity from Doppler spectra.
+            Unless provided, (default) value is set to 0.1 m/s.
+        u_range : float, optional
+            Uncertainty in detecting range at which atmosphere is probed.
+            Unless provided, (default) value is set to 1 m.
+        u_azimuth : float, optional
+            Uncertainty in the beam steering for the azimuth angle.
+            Unless provided, (default) value is set to 0.1 deg.
+        u_elevation : float, optional
+            Uncertainty in the beam steering for the elevation angle.
+            Unless provided, (default) value is set to 0.1 deg.
         
-        Returns
-        -------
-            True / False
-        """        
-        if(type(instrument_position).__module__ == np.__name__):
-                if (len(instrument_position.shape) == 1 
-                    and instrument_position.shape[0] == 3):
-                        return True
-                else:
-                    # print('Wrong dimensions! Must be == 3 !')
-                    return False
-        else:
-            # print('Input is not numpy array!')
-            return False
+        Raises
+        ------
+        InappropriatePosition
+            If the provided position of instrument is not properly provided.
+
+        Notes
+        --------
+        Instruments can be add one at time.
+        Currently only the instrument position in UTM coordinate system is supported.
+
+        TODO
+        ----
+        - Support the instrument position in coordinate systems other than UTM
+        - Integrate e-WindLidar attributes and vocabulary for lidar type
+        """
+        if not(self.check_instrument_position(position)):
+            raise ValueError("InappropriatePosition")
+        
+            
+        category="wind_lidar"
+        
+        instrument_dict = {instrument_id:{
+                                            'category': category,
+                                            'position': position,
+                                            'intrinsic_uncertainty':{
+                                                'u_estimation' : 0.1,     # default
+                                                'u_range' : 1,     # default
+                                                'u_azimuth': 0.1,  # default
+                                                'u_elevation': 0.1 # default
+                                                }
+                                        }
+                        }
+            
+        self.instruments.update(instrument_dict)
+        self.update_instrument(instrument_id, **kwargs)
+        print('Instrument \'' + instrument_id + '\' of category \'' + 
+            category +'\' added to the instrument dictionary, ' + 
+            'which now contains ' + str(len(self.instruments)) + 
+            ' instrument(s).')
+    
+
                 
 
-class Uncertainty(Measurements, Instruments):
+class Uncertainty(Measurements, Lidars):
     """
     A class containing methods to calculate single- and dual- Doppler uncertainty.
 
