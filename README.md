@@ -103,7 +103,7 @@ model_pars={'wind_speed':10,
 
 lidar_uncertainty.add_atmosphere('pl_1', 'power_law', model_pars)
 ```
-The above commands will add [power law model](https://en.wikipedia.org/wiki/Wind_profile_power_law) to the object and parametrize it using the set of parameters. Currently *YADDUM* only supports this atmospheric model.
+The above commands will add [power law model](https://en.wikipedia.org/wiki/Wind_profile_power_law) to the object (specifically dictionary `lidar_uncertanty.atmosphere`) together with the set of parameters. Currently *YADDUM* only supports this atmospheric model.
 
 Next we will add measurement points to our object. We can either add an arbitrary array of points or create 2D horizontal mesh of points:
 ```
@@ -115,7 +115,13 @@ lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh',
                                    mesh_center = np.array([0,0,100]), 
                                    extent = 5000)
 ```
-In the first case we have added single measurement point with coordinates of (500, -500, 100) in Northing, Easting and Height, while in the second case we have provided position of the mesh center (0,0,100) and set the mesh resolution (10) and mesh extent in Easting and Northing (5000). The unit for each of these values is meters. Both set of points (single point and mesh points) now exist in our object and they are distinguishable by their ids ('*pts*' and '*mesh*'). 
+In the first case we have added single measurement point with coordinates of (500, -500, 100) in Northing, Easting and Height, while in the second case we have provided position of the mesh center (0,0,100), set the mesh resolution (10) and mesh extent in Easting and Northing (5000). The unit for each of these values is meters. Both category of measurement points (i.e., single point and mesh points) now exist in our object and they are distinguishable by their ids ('*pts*' and '*mesh*'). They are stored in the measurement dictionary:
+```
+lidar_uncertainty.measurements['mesh’]
+lidar_uncertainty.measurements['pts']
+
+```
+
 In our last step prior the uncertainty calculation we will lidars to our object:
 ```
 uncertainty_pars = {'u_estimation':0.1,
@@ -135,7 +141,9 @@ With the code above we have added two lidars  '*koshava*' and '*whittle*' togeth
 - Resolve range (i.e., distance) from which the backscatter signal is coming from (*u_range*)
 - Point laser beams towards measurement points (*u_azimuth* and *u_elevation*)
 
-The last step is to call the method `calculate_uncertainty()` while specifying ids of lidars, measurement point, atmospheric and uncertainty model to be used for the calculations:
+Similarly to the measurement points and atmospheric model users have access to the lidar information by executing `lidar_uncertainty.instruments` command.
+
+The last step is to call the method `calculate_uncertainty()` and specify ids of lidars, measurement point, atmospheric and uncertainty model to be used for the calculations:
 ```
 lidar_uncertainty.calculate_uncertainty(['koshava', 'whittle'], 'mesh', 'pl_1', 
                                         uncertainty_model='dual-Doppler')
