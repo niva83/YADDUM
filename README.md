@@ -29,7 +29,7 @@
 ## About <a name = "about"></a>
 <!-- Write about 1-2 paragraphs describing the purpose of your project. -->
 
-*YADDUM* is focused on delivering a simple yet effective dual-Doppler uncertainty model. This package is based on the [dual-Doppler uncertainty model](https://zenodo.org/record/1441178)  developed by [Nikola Vasiljevic](https://orcid.org/0000-0002-9381-9693) and [Michael Courtney](https://orcid.org/0000-0001-6286-5235). *YADDUM* is applicable for [wind lidars](https://www.mdpi.com/2072-4292/8/11/896) and [radars](https://www.mdpi.com/2072-4292/10/11/1701).
+*YADDUM* is focused on delivering a simple yet effective dual-Doppler uncertainty model. This package is based on the [dual-Doppler uncertainty model](https://zenodo.org/record/1441178)  developed by [Nikola Vasiljevic](https://orcid.org/0000-0002-9381-9693) and [Michael Courtney](https://orcid.org/0000-0001-6286-5235). *YADDUM* is applicable for [wind lidars](https://www.mdpi.com/2072-4292/8/11/896) and [radars](https://www.mdpi.com/2072-4292/10/11/1701). The model is based on the [law of propagation of uncertainties](https://www.bipm.org/utils/common/documents/jcgm/JCGM_100_2008_E.pdf). A full mathematical description of the model is enclosed in docstring of the package.
 
 ![Concept](../assets/concept.png?raw=true)
 <br> 
@@ -149,7 +149,7 @@ lidar_uncertainty.calculate_uncertainty(['koshava', 'whittle'], 'mesh', 'pl_1',
                                         uncertainty_model='dual-Doppler')
 ```
 
-This last step will create the two xarray datasets contaning the results of the uncertainty calculation, which can be viewed graphically and explore numerically:
+This last step will create the two xarray datasets contaning the results of the uncertainty calculation. [xarray](http://xarray.pydata.org/en/stable/) is a very powerful package and comes with a range of functionalities, thus it is worth spending time and learning how to operate with it. For example, xarray dataset can be viewed graphically and explore numerically:
 ```
 lidar_uncertainty.uncertainty.azimuth_gain.sel(instrument_id = 'koshava').plot()
 plt.show()
@@ -157,6 +157,12 @@ plt.show()
 lidar_uncertainty.uncertainty.azimuth_gain
 ```
 
+In case of confusion on what each method does and how to parametrize help is available to you. In our example to access the help for one of the methods you need to type:
+```
+help(lidar_uncertainty.calculate_uncertainty)
+```
+
+Beware that *YADDUM* conforms to [cf convention](http://cfconventions.org/Data/cf-standard-names/69/build/cf-standard-name-table.html) for naming and definition of atmospheric parameters.
 
 ## Built Using <a name = "built_using"></a>
 - [Python](https://www.python.org/) - Languange
