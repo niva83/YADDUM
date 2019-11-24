@@ -81,6 +81,7 @@ Add notes about how to use the system.
 
 ## How to cite <a name = "cite"></a>
 This package is persisted using [Zenodo](https://zenodo.org/) making it citable and preserved. Simply click on the banner bellow to find your preferred citation options (e.g., BibTex): 
+
 [![DOI](https://zenodo.org/badge/221973907.svg)](https://zenodo.org/badge/latestdoi/221973907)
 
 ## Contributing <a name = "contributing"></a>
