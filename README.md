@@ -80,8 +80,7 @@ Add notes about how to use the system.
 - [@niva83](https://github.com/niva83/) - idea and work
 
 ## How to cite <a name = "cite"></a>
-This package is persisted using [Zenodo](https://zenodo.org/) making it citable and preserved. Simply use the [following link](https://zenodo.org/badge/latestdoi/221973907) to find your preferred citation options (e.g., BibTex): 
-
+This package is persisted using [Zenodo](https://zenodo.org/) making it citable and preserved. Simply click on the banner bellow to find your preferred citation options (e.g., BibTex): 
 [![DOI](https://zenodo.org/badge/221973907.svg)](https://zenodo.org/badge/latestdoi/221973907)
 
 ## Contributing <a name = "contributing"></a>
