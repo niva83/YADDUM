@@ -19,7 +19,6 @@ lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh',
                                    extent = 5000)
 
 points = np.array([[500,-500,100], [1000,2,300]])
-
 lidar_uncertainty.add_measurements('pts', 'points', positions = points)
 
 
