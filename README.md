@@ -67,7 +67,7 @@ python test.py
 ```
 The end result should be a plot that looks like this:
 
-![Demo Animation](../assets/Figure_1.png?raw=true)
+![Azimuth_Gain](../assets/Figure_1.png?raw=true)
 
 ## Usage <a name="usage"></a>
 Add notes about how to use the system.
