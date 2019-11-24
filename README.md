@@ -72,6 +72,9 @@ The end result should be a plot that looks like this:
 ## Usage <a name="usage"></a>
 Add notes about how to use the system.
 
+![Concept](../assets/concept.png?raw=true)
+
+![Classes](../assets/classes_relation.png?raw=true)
 
 ## Built Using <a name = "built_using"></a>
 - [Python](https://www.python.org/) - Languange
@@ -91,3 +94,4 @@ If you want to take an active part in the further development of *YADDUM* make a
 
 ## Acknowledgements <a name = "acknowledgement"></a>
 [Michael Courtney](https://orcid.org/0000-0001-6286-5235) for the support in developing [dual-Doppler uncertainty model](https://zenodo.org/record/1441178) which is the basis of this package.
+
