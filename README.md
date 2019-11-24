@@ -62,7 +62,7 @@ python setup.py install
 This command will download all the dependencies and install them first before installing *YADDUM* package. Beware that, unless you activate your preferred [virtualenv](https://virtualenv.pypa.io/en/latest/), this command will overwrite any existing packaged. Therefore, if you are not confortable to setup [virtualenv](https://virtualenv.pypa.io/en/latest/) opt for the installation using conda.
 
 ## Running the test <a name = "tests"></a>
-An example of Python script which uses *YADDUM* package is provided in [test folder](https://github.com/niva83/YADDUM/blob/master/test/test.py). Simply download the script and run the following command:
+An example of Python script which uses *YADDUM* package is provided in [test folder](../test/test.py). Simply download the script and run the following command:
 ```
 python test.py
 ```
@@ -157,7 +157,7 @@ plt.show()
 lidar_uncertainty.uncertainty.azimuth_gain
 ```
 
-In case of confusion on what each method does and how to parametrize it simply check docstring of each method.  In our example to access the help for one of the methods you need to type:
+In case of confusion on what each method does and how to parametrize it simply check docstring methods.  In our example to access the help for one of the methods we used you need to type:
 ```
 help(lidar_uncertainty.calculate_uncertainty)
 ```
