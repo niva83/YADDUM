@@ -117,7 +117,7 @@ lidar_uncertainty.add_measurements('mesh', 'horizontal_mesh',
 ```
 In the first case we have added single measurement point with coordinates of (500, -500, 100) in Northing, Easting and Height, while in the second case we have provided position of the mesh center (0,0,100), set the mesh resolution (10) and mesh extent in Easting and Northing (5000). The unit for each of these values is meters. Both category of measurement points (i.e., single point and mesh points) now exist in our object and they are distinguishable by their ids ('*pts*' and '*mesh*'). They are stored in the measurement dictionary:
 ```
-lidar_uncertainty.measurements['mesh’]
+lidar_uncertainty.measurements['mesh']
 lidar_uncertainty.measurements['pts']
 
 ```
