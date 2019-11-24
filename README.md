@@ -29,17 +29,17 @@
 ## About <a name = "about"></a>
 <!-- Write about 1-2 paragraphs describing the purpose of your project. -->
 
-YADDUM is focused on delivering a simple yet effective dual-Doppler uncertainty model. This package is based on the [dual-Doppler uncertainty model](https://zenodo.org/record/1441178)  developed by [Nikola Vasiljevic](https://orcid.org/0000-0002-9381-9693) and [Michael Courtney](https://orcid.org/0000-0001-6286-5235). YADDUM is applicable for [wind lidars](https://www.mdpi.com/2072-4292/8/11/896) and [radars](https://www.mdpi.com/2072-4292/10/11/1701).
+*YADDUM* is focused on delivering a simple yet effective dual-Doppler uncertainty model. This package is based on the [dual-Doppler uncertainty model](https://zenodo.org/record/1441178)  developed by [Nikola Vasiljevic](https://orcid.org/0000-0002-9381-9693) and [Michael Courtney](https://orcid.org/0000-0001-6286-5235). *YADDUM* is applicable for [wind lidars](https://www.mdpi.com/2072-4292/8/11/896) and [radars](https://www.mdpi.com/2072-4292/10/11/1701).
 
 <br> 
 
 
 
 ## Getting Started <a name = "getting_started"></a>
-These instructions will get you a copy of YADDUM up and running on your local machine. 
+These instructions will get you a copy of *YADDUM* up and running on your local machine. 
 
 ### Prerequisites
-YADDUM is written in Python 3, therefore you will need to have [Python 3](https://realpython.com/installing-python/) installed on your local machine. For the simplicity of YADDUM installation having [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is advisable. 
+*YADDUM* is written in Python 3, therefore you will need to have [Python 3](https://realpython.com/installing-python/) installed on your local machine. For the simplicity of *YADDUM* installation having [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is advisable. 
 
 ### Installing
 There are two ways how you can install *YADDUM*, either using [conda](https://docs.conda.io/en/latest/) or downloading the source code and manually installing the package.
