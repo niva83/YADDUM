@@ -62,7 +62,7 @@ python setup.py install
 This command will download all the dependencies and install them first before installing *YADDUM* package. Beware that, unless you activate your preferred [virtualenv](https://virtualenv.pypa.io/en/latest/), this command will overwrite any existing packaged. Therefore, if you are not confortable to setup [virtualenv](https://virtualenv.pypa.io/en/latest/) opt for the installation using conda.
 
 ## Running the test <a name = "tests"></a>
-An example of Python script which uses *YADDUM* package is provided in [test folder](../test/test.py). Simply download the script and run the following command:
+An example of Python script which uses *YADDUM* package is provided in [test folder](./test/test.py). Simply download the script and run the following command:
 ```
 python test.py
 ```
