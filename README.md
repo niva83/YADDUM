@@ -31,6 +31,7 @@
 
 *YADDUM* is focused on delivering a simple yet effective dual-Doppler uncertainty model. This package is based on the [dual-Doppler uncertainty model](https://zenodo.org/record/1441178)  developed by [Nikola Vasiljevic](https://orcid.org/0000-0002-9381-9693) and [Michael Courtney](https://orcid.org/0000-0001-6286-5235). *YADDUM* is applicable for [wind lidars](https://www.mdpi.com/2072-4292/8/11/896) and [radars](https://www.mdpi.com/2072-4292/10/11/1701).
 
+![Concept](../assets/concept.png?raw=true)
 <br> 
 
 
@@ -70,13 +71,12 @@ The end result should be a plot that looks like this:
 ![Azimuth_Gain](../assets/Figure_1.png?raw=true)
 
 ## Usage <a name="usage"></a>
-*YADDUM* captures four fundamental entities which are: atmosphere, measurement locations, instruments and uncertainty. These entities are reflected in the image below:
-
-![Concept](../assets/concept.png?raw=true)
-
-Accordingly, *YADDUM* consists of four clases.
+*YADDUM* contains five classes (see image below) which are: *Atmosphere*, *Measurements*, *Instruments*, *Lidars* and *Uncertainty*. However, the end-user only interacts with the class *Uncertainty* as this class inherits the properties of remaining four classes. 
 
 ![Classes_Relations](../assets/classes_relation.png?raw=true)
+
+
+
 
 ## Built Using <a name = "built_using"></a>
 - [Python](https://www.python.org/) - Languange
