@@ -70,9 +70,11 @@ The end result should be a plot that looks like this:
 ![Azimuth_Gain](../assets/Figure_1.png?raw=true)
 
 ## Usage <a name="usage"></a>
-Add notes about how to use the system.
+*YADDUM* captures four fundamental entities which are: atmosphere, measurement locations, instruments and uncertainty. These entities are reflected in the image below:
 
 ![Concept](../assets/concept.png?raw=true)
+
+Accordingly, *YADDUM* consists of four clases.
 
 ![Classes_Relations](../assets/classes_relation.png?raw=true)
 
