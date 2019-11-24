@@ -71,11 +71,24 @@ The end result should be a plot that looks like this:
 ![Azimuth_Gain](../assets/Figure_1.png?raw=true)
 
 ## Usage <a name="usage"></a>
-*YADDUM* contains five classes (see image below) which are: *Atmosphere*, *Measurements*, *Instruments*, *Lidars* and *Uncertainty*. However, the end-user only interacts with the class *Uncertainty* as this class inherits the properties of remaining four classes. 
+*YADDUM* contains five classes (see image below) which are: *Atmosphere*, *Measurements*, *Instruments*, *Lidars* and *Uncertainty*. However, users only interacts with the class *Uncertainty* as this class inherits the properties of the remaining four classes. 
 
 ![Classes_Relations](../assets/classes_relation.png?raw=true)
 
+The worflow with *YADDUM* is relatively simple and essentially consists of the following steps:
+1. Atmosphere parametrization using the method `add_atmosphere(atmosphere_id, model, model_parameters)`
+2. Localization of measurement points using the method `add_measurements(measurements_id, category, utm_zone, **kwargs)`
+3. Localization and description of lidars using the method `add_lidar(instrument_id, position, category, **kwargs)``
+4. Calculation of the measurement uncertainty using the method `calculate_uncertainty(instrument_ids, measurements_id, atmosphere_id, model)`
 
+The methods `add_atmosphere()`, `add_measurements()` and `add_lidar()` create three Python dictionaries `atmosphere`, `measurements` and `instruments`, while calling the method `calculate_uncertainty()` produces two [xarray datasets](http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html), namely `wind_field` and `uncertainty`. 
+
+First, an end-user imports the package and creates *Uncertainty* object:
+```
+ss
+```
+
+1. Atmospheric model is set to the Atmosphere is parametrized
 
 
 ## Built Using <a name = "built_using"></a>
