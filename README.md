@@ -74,7 +74,7 @@ Add notes about how to use the system.
 
 ![Concept](../assets/concept.png?raw=true)
 
-![Classes](../assets/classes_relation.png?raw=true)
+![Classes_Relations](../assets/classes_relation.png?raw=true)
 
 ## Built Using <a name = "built_using"></a>
 - [Python](https://www.python.org/) - Languange
