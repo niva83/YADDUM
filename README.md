@@ -157,7 +157,7 @@ plt.show()
 lidar_uncertainty.uncertainty.azimuth_gain
 ```
 
-In case of confusion on what each method does and how to parametrize help is available to you. In our example to access the help for one of the methods you need to type:
+In case of confusion on what each method does and how to parametrize it simply check docstring of each method.  In our example to access the help for one of the methods you need to type:
 ```
 help(lidar_uncertainty.calculate_uncertainty)
 ```
