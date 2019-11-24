@@ -20,12 +20,11 @@
 - [Getting Started](#getting_started)
 - [Usage](#usage)
 - [Built Using](#built_using)
-<!-- - [TODO](../TODO.md) -->
 - [Contributing](#contributing)
 - [Authors](#authors)
 - [How to cite](#cite)
 - [Acknowledgments](#acknowledgement)
-
+<!-- - [TODO](../TODO.md) -->
 
 ## About <a name = "about"></a>
 <!-- Write about 1-2 paragraphs describing the purpose of your project. -->
