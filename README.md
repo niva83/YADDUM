@@ -104,6 +104,7 @@ model_pars={'wind_speed':10,
 lidar_uncertainty.add_atmosphere('pl_1', 'power_law', model_pars)
 ```
 The above commands will add [power law model](https://en.wikipedia.org/wiki/Wind_profile_power_law) to the object and parametrize it using the set of parameters. Currently *YADDUM* only supports this atmospheric model.
+
 Next we will add measurement points to our object. We can either add an arbitrary array of points or create 2D horizontal mesh of points:
 ```
 points = np.array([[500,-500,100]])
