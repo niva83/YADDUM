@@ -122,7 +122,7 @@ lidar_uncertainty.measurements['pts']
 
 ```
 
-In our last step prior the uncertainty calculation we will lidars to our object:
+In our last step prior the uncertainty calculation we will add lidars to our object:
 ```
 uncertainty_pars = {'u_estimation':0.1,
                     'u_azimuth':0.1,
