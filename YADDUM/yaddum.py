@@ -64,7 +64,7 @@ def wind_vector_to_los(u,v,w, azimuth, elevation):
               w * np.sin(elevation)	
 
         return los
-
+    
 def generate_mesh(center, map_extent, mesh_res):
     """
     Generate a horizontal mesh containing equally spaced (measurement) points.
