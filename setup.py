@@ -30,7 +30,7 @@ setup(
     ],
 
     packages=['yaddum'],  # Required
-    python_requires='==3.7',
+    python_requires='==3.7.3',
     install_requires=[
                       'xarray', 
                       'netCDF4', 
