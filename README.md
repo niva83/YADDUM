@@ -35,7 +35,7 @@
 
 
 ## Getting Started <a name = "getting_started"></a>
-These instructions will get you a copy of *YADDUM* up and running on your local machine. 
+These instructions will get you a copy of *YADDUM* up and running on your local machine. Alternatively, you can run *YADDUM* without install it using [binder](https://mybinder.org/v2/gh/niva83/YADDUM/master?filepath=examples%2Fexample_1.ipynb).
 
 ### Prerequisites
 *YADDUM* is written in Python 3, therefore you will need to have [Python 3](https://realpython.com/installing-python/) installed on your local machine. For the simplicity of *YADDUM* installation having [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is advisable. 
@@ -75,8 +75,8 @@ The end result should be a plot that looks like this:
 
 The worflow with *YADDUM* is relatively simple and essentially consists of the following steps:
 1. Atmosphere parametrization using the method `add_atmosphere(atmosphere_id, model, model_parameters)`
-2. Localization of measurement points using the method `add_measurements(measurements_id, category, **kwargs)`
-3. Localization and description of lidars using the method `add_lidar(instrument_id, position, category, **kwargs)``
+4. Localization and description of lidars using the method `add_lidar(instrument_id, position, category, **kwargs)``
+3. Localization of measurement points using the method `add_measurements(measurements_id, category, **kwargs)`
 4. Calculation of the measurement uncertainty using the method `calculate_uncertainty(instrument_ids, measurements_id, atmosphere_id, model)`
 
 The methods `add_atmosphere()`, `add_measurements()` and `add_lidar()` create three [Python dictionaries](https://www.w3schools.com/python/python_dictionaries.asp) `atmosphere`, `measurements` and `instruments`, while calling the method `calculate_uncertainty()` produces two [xarray datasets](http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html), namely `wind_field` and `uncertainty`. 
@@ -103,7 +103,28 @@ lidar_uncertainty.add_atmosphere('pl_1', 'power_law', model_pars)
 ```
 The above commands will add [power law model](https://en.wikipedia.org/wiki/Wind_profile_power_law) to the object (specifically dictionary `lidar_uncertanty.atmosphere`) together with the set of parameters. Currently *YADDUM* only supports this atmospheric model.
 
-Next we will add measurement points to our object. We can either add an arbitrary array of points or create 2D horizontal mesh of points:
+Next, we will add lidars to our object:
+```
+uncertainty_pars = {'u_estimation':0.1,
+                    'u_azimuth':0.1,
+                    'u_elevation':0.1, 
+                    'u_range':1}
+
+lidar_pos_1 = np.array([0,0,0])
+lidar_pos_2 = np.array([1000,1000,0])
+
+
+lidar_uncertainty.add_lidar('koshava', lidar_pos_1, **uncertainty_pars)
+lidar_uncertainty.add_lidar('sterenn', lidar_pos_2, **uncertainty_pars)
+```
+With the code above we have added two lidars  '*koshava*' and '*sterenn*' together with their positions and their intrinsic uncertainties which reflect their ability to:
+- Estimate radial velocity from the backscatter signal (*u_estimation*)
+- Resolve range (i.e., distance) from which the backscatter signal is coming from (*u_range*)
+- Point laser beams towards measurement points (*u_azimuth* and *u_elevation*)
+
+Similarly to the atmospheric dictionary users have access to the lidar information by executing `lidar_uncertainty.instruments` command.
+
+In the following step we will add measurement points to our object. We can either add an arbitrary array of points or create 2D horizontal mesh of points:
 ```
 points = np.array([[500,-500,100]])
 lidar_uncertainty.add_measurements('pts', 'points', positions = points)
@@ -120,30 +141,9 @@ lidar_uncertainty.measurements['pts']
 
 ```
 
-In our last step prior the uncertainty calculation we will add lidars to our object:
-```
-uncertainty_pars = {'u_estimation':0.1,
-                    'u_azimuth':0.1,
-                    'u_elevation':0.1, 
-                    'u_range':1}
-
-lidar_pos_1 = np.array([0,0,0])
-lidar_pos_2 = np.array([1000,1000,0])
-
-
-lidar_uncertainty.add_lidar('koshava', lidar_pos_1, **uncertainty_pars)
-lidar_uncertainty.add_lidar('whittle', lidar_pos_2, **uncertainty_pars)
-```
-With the code above we have added two lidars  '*koshava*' and '*whittle*' together with their positions and their intrinsic uncertainties which reflect their ability to:
-- Estimate radial velocity from the backscatter signal (*u_estimation*)
-- Resolve range (i.e., distance) from which the backscatter signal is coming from (*u_range*)
-- Point laser beams towards measurement points (*u_azimuth* and *u_elevation*)
-
-Similarly to the measurement points and atmospheric model users have access to the lidar information by executing `lidar_uncertainty.instruments` command.
-
 The last step is to call the method `calculate_uncertainty()` and specify ids of lidars, measurement point, atmospheric and uncertainty model to be used for the calculations:
 ```
-lidar_uncertainty.calculate_uncertainty(['koshava', 'whittle'], 'mesh', 'pl_1', 
+lidar_uncertainty.calculate_uncertainty(['koshava', 'sterenn'], 'mesh', 'pl_1', 
                                         uncertainty_model='dual-Doppler')
 ```
 
@@ -160,7 +160,7 @@ In case of confusion on what each method does and how to parametrize it simply c
 help(lidar_uncertainty.calculate_uncertainty)
 ```
 
-Beware that *YADDUM* conforms to [cf convention](http://cfconventions.org/Data/cf-standard-names/69/build/cf-standard-name-table.html) for naming and definition of atmospheric parameters.
+Beware that *YADDUM* conforms to [cf convention](http://cfconventions.org/Data/cf-standard-names/69/build/cf-standard-name-table.html) for naming and definition of atmospheric parameters. Check [the Jupyter notebook](./examples/example_1.ipynb) providing an additional example on how to use *YADDUM*.
 
 ## Built Using <a name = "built_using"></a>
 - [Python](https://www.python.org/) - Languange
