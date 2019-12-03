@@ -35,7 +35,7 @@
 
 
 ## Getting Started <a name = "getting_started"></a>
-These instructions will get you a copy of *YADDUM* up and running on your local machine. Alternatively, you can run *YADDUM* without install it using [binder](https://mybinder.org/v2/gh/niva83/YADDUM/master?filepath=examples%2Fexample_1.ipynb).
+These instructions will get you a copy of *YADDUM* up and running on your local machine. Alternatively, you can run *YADDUM* without installing it using [binder](https://mybinder.org/v2/gh/niva83/YADDUM/master?filepath=examples%2Fexample_1.ipynb).
 
 ### Prerequisites
 *YADDUM* is written in Python 3, therefore you will need to have [Python 3](https://realpython.com/installing-python/) installed on your local machine. For the simplicity of *YADDUM* installation having [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is advisable. 
