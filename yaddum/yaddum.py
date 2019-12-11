@@ -101,8 +101,9 @@ def generate_mesh(center, map_extent, mesh_res):
         np.arange(map_corners[0][1], map_corners[1][1]+ int(mesh_res), int(mesh_res))
             )
 		
-    z = np.full(x.shape, center[2])		
-    mesh = np.array([x, y, z]).T.reshape(-1, 3)
+    H_asl = np.full(x.shape, center[2])		
+    H_agl = np.full(x.shape, center[3])		
+    mesh = np.array([x, y, H_asl, H_agl]).T.reshape(-1, 4)
     return x, y, mesh
 
 
@@ -202,7 +203,7 @@ class Atmosphere:
         Currently method 'add_atmosphere' only supports power law model of the
         atmosphere. The power law model requires following inputs in a form of
         Python dictionary: horizontal speed, wind direction, shear exponent and
-        reference height for horizontal speed.
+        reference height (height above ground level) for horizontal speed.
 
         TODO
         ----
@@ -291,7 +292,7 @@ class Measurements(Atmosphere):
         """        
         if(type(measurement_positions).__module__ == np.__name__):
                 if (len(measurement_positions.shape) == 2 
-                    and measurement_positions.shape[1] == 3):
+                    and measurement_positions.shape[1] == 4):
                         return True
                 else:
                     # print('Wrong dimensions! Must be == (n,3) where ')
@@ -325,12 +326,14 @@ class Measurements(Atmosphere):
         -----------------
         positions : ndarray
             nD array containing data with `float` or `int` type corresponding 
-            to Northing, Easting and Height coordinates of the measurement pts.
+            to Northing, Easting, Height above ground level, and Height above
+            sea level coordinates of the measurement pts.
             nD array data are expressed in meters.
             This kwarg is required if category=='points'
         mesh_center : ndarray
             nD array containing data with `float` or `int` type
-            corresponding to Northing, Easting and height of the mesh center.
+            corresponding to Northing, Easting and Height above ground level, 
+            and Height above sea level of the mesh center.
             nD array data are expressed in meters.
             This kwarg is required if category=='horizontal_mesh'.
         extent : int
@@ -449,7 +452,8 @@ class Measurements(Atmosphere):
                                         'wind_from_direction':(['point'], wind_from_direction)},
                                         coords={'Easting':(['point'], positions[:,0]),
                                                 'Northing':(['point'], positions[:,1]),
-                                                'Height': (['point'], positions[:,2])}
+                                                'Height_asl': (['point'], positions[:,2]),
+                                                'Height_agl': (['point'], positions[:,3])}
                                         )
         
         if category == 'horizontal_mesh':
@@ -462,7 +466,8 @@ class Measurements(Atmosphere):
                                         'wind_from_direction':(['Northing', 'Easting'], wind_from_direction.reshape(nrows, ncols).T)},
                                         coords={'Easting': np.unique(positions[:,0]),
                                                 'Northing': np.unique(positions[:,1]),
-                                                'Height':  positions[1,2]}
+                                                'Height_asl':  positions[1,2],
+                                                'Height_agl':  positions[1,3]}
                                         )
         self.wind_field.attrs['title'] = 'Wind characteristics at measurement points of interest'
         self.wind_field.attrs['convention'] = 'cf'
@@ -475,7 +480,8 @@ class Measurements(Atmosphere):
         self.wind_field.wind_from_direction.attrs['units'] = 'degree'
         self.wind_field.Easting.attrs['units'] = 'm'
         self.wind_field.Northing.attrs['units'] = 'm'
-        self.wind_field.Height.attrs['units'] = 'm' 
+        self.wind_field.Height_asl.attrs['units'] = 'm' 
+        self.wind_field.Height_agl.attrs['units'] = 'm' 
 
     def __calculate_wind(self, measurements_id, atmosphere_id):
         """
@@ -496,7 +502,7 @@ class Measurements(Atmosphere):
         shear_exponent = atmosphere['model_parameters']['shear_exponent']
         reference_height = atmosphere['model_parameters']['reference_height']
 
-        gain = (measurements['positions'][:,2] / reference_height)**shear_exponent
+        gain = (measurements['positions'][:,3] / reference_height)**shear_exponent
 
         u = atmosphere['model_parameters']['eastward_wind'] * gain
         v = atmosphere['model_parameters']['northward_wind'] * gain
@@ -1072,7 +1078,7 @@ class Uncertainty(Measurements, Lidars):
 
             (u_estimation)**2 + \
             (wind_speed * u_azimuth * azimuth_gain * (pi/180) )**2 + \
-            (wind_speed * u_elevation * elevation_gain * (pi/180))**2 + \
+            # (wind_speed * u_elevation * elevation_gain * (pi/180))**2 + \
             (wind_speed * u_range * range_gain)**2
 
                                  )
