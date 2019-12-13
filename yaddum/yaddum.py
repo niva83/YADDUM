@@ -762,9 +762,9 @@ class Uncertainty(Measurements, Lidars):
                             'elevation':(['instrument_id','point'], np.array([prob_cord[:,1]])),
                             'range':(['instrument_id','point'], np.array([prob_cord[:,2]])),
                             'radial_speed':(['instrument_id','point'], np.array([rad_speed])),
-                            'azimuth_gain':(['instrument_id','point'], np.array([azimuth_gain])),
-                            'elevation_gain':(['instrument_id','point'], np.array([elevation_gain])),                            
-                            'range_gain':(['instrument_id','point'], np.array([range_gain.T])),
+                            'azimuth_contribution':(['instrument_id','point'], np.array([azimuth_gain])),
+                            'elevation_contribution':(['instrument_id','point'], np.array([elevation_gain])),                            
+                            'range_contribution':(['instrument_id','point'], np.array([range_gain.T])),
                             'radial_speed_uncertainty':(['instrument_id','point'], np.array([u_radial])),
                             # 'instrument_uncertainty':(['instrument_id'], np.array([intrinsic_uncertainty]))
                             },
@@ -795,11 +795,11 @@ class Uncertainty(Measurements, Lidars):
                                      np.array([prob_cord[:,:, 2].T])),
                             'radial_speed':(['instrument_id', 'Northing', 'Easting'], 
                                             np.array([rad_speed.T])),
-                            'azimuth_gain':(['instrument_id', 'Northing', 'Easting'], 
+                            'azimuth_contribution':(['instrument_id', 'Northing', 'Easting'], 
                                             np.array([azimuth_gain.T])),
-                            'elevation_gain':(['instrument_id', 'Northing', 'Easting'], 
+                            'elevation_contribution':(['instrument_id', 'Northing', 'Easting'], 
                                               np.array([elevation_gain.T])),                            
-                            'range_gain':(['instrument_id', 'Northing', 'Easting'], 
+                            'range_contribution':(['instrument_id', 'Northing', 'Easting'], 
                                           np.array([range_gain.T])),
                             'radial_speed_uncertainty':(['instrument_id', 'Northing', 'Easting'], 
                                                         np.array([u_radial.T])),
@@ -890,9 +890,9 @@ class Uncertainty(Measurements, Lidars):
         ds.radial_speed.attrs['units'] = 'm s-1'
         ds.radial_speed.attrs['standard_name'] = 'radial_velocity_of_scatterers_toward_instrument'
         ds.radial_speed_uncertainty.attrs['units'] = 'm s-1'
-        ds.azimuth_gain.attrs['units'] =   'rad-1'
-        ds.elevation_gain.attrs['units'] = 'rad-1'
-        ds.range_gain.attrs['units'] = 'm-1'
+        ds.azimuth_contribution.attrs['units'] = 'm s-1'
+        ds.elevation_contribution.attrs['units'] = 'm s-1'
+        ds.range_contribution.attrs['units'] = 'm s-1'
         ds.Easting.attrs['units'] = 'm'
         ds.Northing.attrs['units'] = 'm'
         ds.Height.attrs['units'] = 'm'
@@ -904,11 +904,49 @@ class Uncertainty(Measurements, Lidars):
         return ds
 
 
-
-
-    def __calculate_azimuth_gain(self, instrument_id):
+    def __calculate_elevation_contribution(self, instrument_id):
         """
-        Calculates the gain for the azimuth component of the radial uncertainty.
+        Calculates the elevation angle uncertainty contribution to the radial uncertainty.
+        
+        Parameters
+        ----------
+        instrument_id : str
+            String indicating the instrument in the dictionary to be considered.
+        
+        Returns
+        -------
+        elevation_contribution : ndarray
+            nD array of elevation angle uncertainty contribution for each measurement point.
+                    
+        """
+        
+        # Necessary parameters extraction:
+        #
+        u_elevation = self.instruments[instrument_id]['intrinsic_uncertainty']['u_elevation']
+        coords = self.__probing_dict[instrument_id]
+        wind_from_direction = self.wind_field.wind_from_direction.values.reshape(-1)
+        shear_exponent = self.wind_field.attrs['atmospheric_model_parameters']['shear_exponent']
+        wind_speed = self.wind_field.attrs['atmospheric_model_parameters']['wind_speed']
+        reference_height = self.wind_field.attrs['atmospheric_model_parameters']['reference_height']
+        measurement_height = self.wind_field.Height_agl.values
+
+
+        elevation_contribution = (- shear_exponent * coords[:,2] *
+                 np.cos(np.radians(coords[:,0] - wind_from_direction)) *
+                 np.cos(np.radians(coords[:,1]))**2 *
+                 (measurement_height / reference_height)**(shear_exponent-1) * 
+                 (wind_speed / reference_height) +
+                 np.cos(np.radians(coords[:,0] - wind_from_direction)) *
+                 np.sin(np.radians(coords[:,1])) *
+                 wind_speed*(measurement_height / reference_height)**(shear_exponent) 
+                 ) * u_elevation * (pi/180) 
+                 
+        
+        return elevation_contribution
+
+    def __calculate_azimuth_contribution(self, instrument_id):
+        """
+        Calculates the azimuth angle uncertainty contribution to the radial uncertainty.
         
         Parameters
         ----------
@@ -917,113 +955,60 @@ class Uncertainty(Measurements, Lidars):
             
         Returns
         -------
-        gain : ndarray
-            nD array of azimuth gains for each measurement point.
-        
-        Notes
-        --------
-        The azimuth gain, :math:`{A_{{\\theta}}}`, is calculated using the 
-        following mathematical expression:
-        
-        .. math::
-            A_{{\\theta}} = \sin({\\theta} -\Theta ) \cos({\\varphi})
-        
-        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
-        elevation angle of the beam, while :math:`{\Theta}` is the wind direction.
-       
+        azimuth_contribution : ndarray
+            nD array of azimuth angle uncertainty contribution for each measurement point.
         """
-        # Pull wind direction from xarray object and 
-        # unwrap it to secure it is a 1D array.
-        wind_from_direction = self.wind_field.wind_from_direction.values.T.reshape(-1)
+        # Necessary parameters extraction:
+        #
+        u_azimuth = self.instruments[instrument_id]['intrinsic_uncertainty']['u_azimuth']        
         coords = self.__probing_dict[instrument_id]
-        
-
-        gain = (np.sin(np.radians(coords[:,0]) - np.radians(wind_from_direction)) *
-                np.cos(np.radians(coords[:,1])))
-        
-        return gain
-    
-    def __calculate_elevation_gain(self, instrument_id):
-        """
-        Calculates the gain for the elevation component of the radial uncertainty.
-        
-        Parameters
-        ----------
-        instrument_id : str
-            String indicating the instrument in the dictionary to be considered.
-        
-        Returns
-        -------
-        gain : ndarray
-            nD array of elevation gains for each measurement point.
-                    
-        Notes
-        --------
-        The elevation gain, :math:`{A_{{\\varphi}}}`, is calculated using the 
-        following mathematical expression:
-        
-        .. math::
-            A_{{\\varphi}} = ({\\alpha} \cot({\\varphi})^{2}-1)\cos({\\theta} -\Theta)\sin({\\varphi})
-        
-        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
-        elevation angle of the beam, :math:`{\Theta}` is the wind direction, 
-        while :math:`{\\alpha}` is the wind shear exponent.
-       
-        """
-
-        coords = self.__probing_dict[instrument_id]
-
-        # Pull wind direction and wind shear from xarray object 
         wind_from_direction = self.wind_field.wind_from_direction.values.reshape(-1)
         shear_exponent = self.wind_field.attrs['atmospheric_model_parameters']['shear_exponent']
+        wind_speed = self.wind_field.attrs['atmospheric_model_parameters']['wind_speed']
+        reference_height = self.wind_field.attrs['atmospheric_model_parameters']['reference_height']
+        measurement_height = self.wind_field.Height_agl.values        
 
-        gain = ((shear_exponent * (1/np.tan(np.radians(coords[:,1])))**2 - 1) * 
-                np.cos(np.radians(coords[:,0]) - np.radians(wind_from_direction)) * 
-                np.sin(np.radians(coords[:,1])))
+        azimuth_contribution = - (np.sin(np.radians(coords[:,0] - wind_from_direction)) *
+                                  np.cos(np.radians(coords[:,1])) *
+                                  wind_speed*(measurement_height / reference_height)**(shear_exponent)) * u_azimuth * (pi/180) 
         
-        return gain
+        return azimuth_contribution
 
-    def __calculate_range_gain(self, instrument_id):
+    def __calculate_range_contribution(self, instrument_id):
         """
-        Calculates the gain for the range component of the radial uncertainty.
+        Calculates the range uncertainty contribution to the radial uncertainty.
         
         Parameters
         ----------
         instrument_id : str
             String indicating the instrument in the dictionary to be considered.
-        
+            
         Returns
         -------
-        gain : ndarray
-            nD array of range gains for each measurement point.
-                    
-        Notes
-        --------
-        The range gain, :math:`{A_{R}}`, is calculated using the 
-        following mathematical expression:
-        
-        .. math::
-            A_{R} = \\frac{{\\alpha}}{R} \cos({\\theta} -\Theta)\cos({\\varphi})
-        
-        where :math:`{\\theta}` and :math:`{\\varphi}` are the azimuth and 
-        elevation angle of the beam, :math:`{\Theta}` is the wind direction, 
-        :math:`{\\alpha}` is the wind shear exponent, while :math:`{R}` is 
-        the range at which a measurement point is located along the beam.
-       
+        range_contribution : ndarray
+            nD array of range uncertainty contribution for each measurement point.
         """
-
+        # Necessary parameters extraction:
+        #        
+        u_range = self.instruments[instrument_id]['intrinsic_uncertainty']['u_range']
         coords = self.__probing_dict[instrument_id]
-        # Pull wind direction and wind shear from xarray object 
-        wind_from_direction = self.wind_field.wind_from_direction.values.T.reshape(-1)
+        wind_from_direction = self.wind_field.wind_from_direction.values.reshape(-1)
         shear_exponent = self.wind_field.attrs['atmospheric_model_parameters']['shear_exponent']
+        wind_speed = self.wind_field.attrs['atmospheric_model_parameters']['wind_speed']
+        reference_height = self.wind_field.attrs['atmospheric_model_parameters']['reference_height']
+        measurement_height = self.wind_field.Height_agl.values
         
+        range_contribution = (
+                (shear_exponent/reference_height) * 
+                np.cos(np.radians(coords[:,0] - wind_from_direction)) * 
+                np.cos(np.radians(coords[:,1])) *
+                np.sin(np.radians(coords[:,1])) *
+                
+                wind_speed*(measurement_height / reference_height)**(-1 + shear_exponent)
+                )*u_range
         
-        gain = ((shear_exponent / coords[:,2]) * 
-                np.cos(np.radians(coords[:,0]) - 
-                       np.radians(wind_from_direction)) * 
-                np.cos(np.radians(coords[:,1])))
-        
-        return gain
+            
+        return range_contribution
 
 
     def __calculate_radial_uncertainty(self, instrument_id):
@@ -1048,44 +1033,31 @@ class Uncertainty(Measurements, Lidars):
         
         .. math::
             u_{V_{radial}}^2 = u_{estimation}^2 +
-                           (V_{h} u_{{\\theta}} A_{{\\theta}} )^2 +
-                           (V_{h} u_{{\\varphi}} A_{{\\varphi}} )^2 +
-                           (V_{h} u_{R} A_{R} )^2 
-                        
-        
-        where :math:`{u_{estimation}}`, :math:`{u_{{\\theta}}}`, :math:`{u_{{\\varphi}}}`,
-        and :math:`{u_{R}}` are uncertainties for radial speed estimation, azimuth angle, 
-        elevation angle and range respectively, :math:`{A_{{\\theta}}}`, 
-        :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}` are the uncertainty components
-        gains for azimuth, elevation and range respectively, while :math:`{V_{h}}` 
-        is the horizontal wind speed.
+                               (elevation_contribution)^2 +
+                               (azimuth_contribution)^2 +
+                               (range_contribution)^2 
+
         """
-
-        azimuth_gain = self.__calculate_azimuth_gain(instrument_id)
-        elevation_gain = self.__calculate_elevation_gain(instrument_id)
-        range_gain = self.__calculate_range_gain(instrument_id)
-
-        # Pulling intrinsic uncertainties from the lidar dictionary
-        u_azimuth = self.instruments[instrument_id]['intrinsic_uncertainty']['u_azimuth']
-        u_elevation = self.instruments[instrument_id]['intrinsic_uncertainty']['u_elevation']
-        u_range = self.instruments[instrument_id]['intrinsic_uncertainty']['u_range']
-        u_estimation = self.instruments[instrument_id]['intrinsic_uncertainty']['u_estimation']
         
-        # Pulling horizontal wind speed from the measurements dictionary
-        wind_speed = self.wind_field.wind_speed.values.T.reshape(-1)
+        u_estimation = self.instruments[instrument_id]['intrinsic_uncertainty']['u_estimation']
+        azimuth_contrib = self.__calculate_azimuth_contribution(instrument_id)
+        elevation_contrib = self.__calculate_elevation_contribution(instrument_id)
+        range_contrib = self.__calculate_range_contribution(instrument_id)
+
+        
 
         abs_uncertainty = np.sqrt(
 
-            (u_estimation)**2 + \
-            (wind_speed * u_azimuth * azimuth_gain * (pi/180) )**2 + \
-            # (wind_speed * u_elevation * elevation_gain * (pi/180))**2 + \
-            (wind_speed * u_range * range_gain)**2
+            (u_estimation)**2 + 
+            (azimuth_contrib)**2 + 
+            (elevation_contrib)**2 +             
+            (range_contrib)**2
 
                                  )
 
-        dict_out = {'azimuth_gain' : azimuth_gain, 
-                    'elevation_gain' : elevation_gain,
-                    'range_gain': range_gain,
+        dict_out = {'azimuth_gain' : azimuth_contrib, 
+                    'elevation_gain' : elevation_contrib,
+                    'range_gain': range_contrib,
                     'u_radial' : abs_uncertainty,
                     'uncertainty_model' : 'radial_velocity'
                     }
@@ -1228,29 +1200,9 @@ class Uncertainty(Measurements, Lidars):
         
         .. math::
             u_{V_{radial}}^2 = u_{estimation}^2 +
-                           (V_{h} u_{{\\theta}} A_{{\\theta}} )^2 +
-                           (V_{h} u_{{\\varphi}} A_{{\\varphi}} )^2 +
-                           (V_{h} u_{R} A_{R} )^2 
-                        
-        
-        where :math:`{u_{estimation}}`, :math:`{u_{{\\theta}}}`, :math:`{u_{{\\varphi}}}`,
-        and :math:`{u_{R}}` are uncertainties for radial speed estimation, azimuth angle, 
-        elevation angle and range respectively, :math:`{A_{{\\theta}}}`, 
-        :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}` are the uncertainty components
-        gains for azimuth, elevation and range respectively, while :math:`{V_{h}}` 
-        is the horizontal wind speed.
-        
-        The gains :math:`{A_{{\\theta}}}`, :math:`{A_{{\\varphi}}}` and :math:`{A_{R}}`
-        are calculated using the following mathematical expression:
-        
-        .. math::
-            A_{{\\theta}} = \sin({\\theta} -\Theta ) \cos({\\varphi})
-                    
-        .. math::
-            A_{{\\varphi}} = ({\\alpha} \cot({\\varphi})^{2}-1)\cos({\\theta} -\Theta)\sin({\\varphi})
-
-        .. math::
-            A_{R} = \\frac{{\\alpha}}{R} \cos({\\theta} -\Theta)\cos({\\varphi})                            
+                               (elevation_contribution)^2 +
+                               (azimuth_contribution)^2 +
+                               (range_contribution)^2                 
         
         The dual-Doppler wind speed uncertainty, :math:`{u_{V_{h}}}`, is calculated 
         using the following mathematical expression:
