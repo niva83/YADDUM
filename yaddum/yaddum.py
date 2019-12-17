@@ -846,6 +846,11 @@ class Uncertainty(Measurements, Lidars):
                                                        self.__wind_speed_uncertainty),
                              'wind_from_direction_uncertainty':(['point'], 
                                                                 self.__wind_from_direction_uncertainty),
+                             'between_beam_angle':(['point'], self.__between_beam_angle),
+                             'numerator_of_wind_speed_uncertainty':(['point'], self.__numerator_Vh),
+                             'numerator_of_wind_from_direction_uncertainty':(['point'], self.__numerator_dir),
+                             'denominator_of_wind_speed_uncertainty':(['point'], self.__denominator_Vh),
+                             'denominator_of_wind_from_direction_uncertainty':(['point'], self.__denominator_dir),
                             },
                             coords={'Easting':(['point'], positions[:,0]),
                                     'Northing':(['point'], positions[:,1]),
@@ -856,6 +861,11 @@ class Uncertainty(Measurements, Lidars):
         if category == 'horizontal_mesh':
             ds = xr.Dataset({'wind_speed_uncertainty':(['Northing', 'Easting'], self.__wind_speed_uncertainty),
                              'wind_from_direction_uncertainty':(['Northing', 'Easting'], self.__wind_from_direction_uncertainty),
+                             'between_beam_angle':(['Northing', 'Easting'], self.__between_beam_angle),
+                             'numerator_of_wind_speed_uncertainty':(['Northing', 'Easting'], self.__numerator_Vh),
+                             'numerator_of_wind_from_direction_uncertainty':(['Northing', 'Easting'], self.__numerator_dir),
+                             'denominator_of_wind_speed_uncertainty':(['Northing', 'Easting'], self.__denominator_Vh),
+                             'denominator_of_wind_from_direction_uncertainty':(['Northing', 'Easting'], self.__denominator_dir),                             
                             },
                             coords={'Easting': np.unique(positions[:,0]), 
                                     'Northing': np.unique(positions[:,1]),
@@ -1072,12 +1082,7 @@ class Uncertainty(Measurements, Lidars):
         ----------
         instrument_id : str
             String indicating the instrument in the dictionary to be considered.
-        
-        Returns
-        -------
-        uncertainty : ndarray
-            nD array of calculated dual-Doppler wind speed uncertainty.
-            
+                    
         Notes
         --------
         The dual-Doppler wind speed uncertainty, :math:`{u_{V_{h}}}`, is calculated 
@@ -1101,6 +1106,7 @@ class Uncertainty(Measurements, Lidars):
         azimuth_1 = self.uncertainty.azimuth.sel(instrument_id =instrument_ids[0]).values
         azimuth_2 = self.uncertainty.azimuth.sel(instrument_id =instrument_ids[1]).values
         angle_dif = np.radians(azimuth_1 - azimuth_2) # in radians
+        
 
         los_1 = self.uncertainty.radial_speed.sel(instrument_id=instrument_ids[0]).values
         U_rad1 = self.uncertainty.radial_speed_uncertainty.sel(instrument_id =instrument_ids[0]).values
@@ -1111,11 +1117,23 @@ class Uncertainty(Measurements, Lidars):
         wind_speed = self.wind_field.wind_speed.values
 
         
-        uncertainty =((wind_speed * (np.sin(angle_dif))**2)**-1 * 
-                      np.sqrt((los_1 - los_2 * np.cos(angle_dif))**2 * U_rad1**2 + 
-                              (los_2 - los_1 * np.cos(angle_dif))**2 * U_rad2**2))
+        # uncertainty =((wind_speed * (np.sin(angle_dif))**2)**-1 * 
+        #               np.sqrt((los_1 - los_2 * np.cos(angle_dif))**2 * U_rad1**2 + 
+        #                       (los_2 - los_1 * np.cos(angle_dif))**2 * U_rad2**2))
+        
+        numerator = np.sqrt(((los_1 - los_2*np.cos(angle_dif))**2)*U_rad1**2+
+                            ((los_2 - los_1*np.cos(angle_dif))**2)*U_rad2**2)
+        
+        denominator = wind_speed * (np.sin(angle_dif))**2
+        
+        uncertainty = numerator / denominator
+        
+        
+        self.__numerator_Vh = numerator
+        self.__denominator_Vh = denominator
+        self.__wind_speed_uncertainty = uncertainty
+        self.__between_beam_angle = np.degrees(np.arcsin(np.abs(np.sin(angle_dif))))
 
-        return uncertainty
     
     def __calculate_DD_direction_uncertainty(self, instrument_ids):
         """
@@ -1161,12 +1179,20 @@ class Uncertainty(Measurements, Lidars):
         U_rad2 = self.uncertainty.radial_speed_uncertainty.sel(instrument_id =instrument_ids[1]).values
 
         wind_speed = self.wind_field.wind_speed.values
-
-        uncertainty = np.sqrt(((los_1*U_rad2)**2 + (los_2*U_rad1)**2) * 
-                               (wind_speed**4 * np.sin(angle_dif)**2)**-1
-                                                    )*(180/pi)
         
-        return uncertainty
+        numerator = np.sqrt((los_1*U_rad2)**2 + (los_2*U_rad1)**2)
+        denominator = np.abs(np.sin(angle_dif)) * wind_speed**2
+        
+        uncertainty = (numerator / denominator)*(180/pi)
+        self.__wind_from_direction_uncertainty = uncertainty
+        
+        self.__numerator_dir = numerator
+        self.__denominator_dir = denominator
+
+        # uncertainty = np.sqrt(((los_1*U_rad2)**2 + (los_2*U_rad1)**2) * 
+        #                        (wind_speed**4 * np.sin(angle_dif)**2)**-1
+        #                                             )*(180/pi)
+        
 
 
     def calculate_uncertainty(self, instrument_ids, 
@@ -1302,9 +1328,12 @@ class Uncertainty(Measurements, Lidars):
         if uncertainty_model == 'dual-Doppler':
             if len(instrument_ids) != 2:
                 raise ValueError('instrument_ids must contain exactly two ids!')
+
+            self.__calculate_DD_speed_uncertainty(instrument_ids)
+            self.__calculate_DD_direction_uncertainty(instrument_ids)
             
-            self.__wind_speed_uncertainty = self.__calculate_DD_speed_uncertainty(instrument_ids)
-            self.__wind_from_direction_uncertainty = self.__calculate_DD_direction_uncertainty(instrument_ids)
+            # self.__wind_speed_uncertainty = self.__calculate_DD_speed_uncertainty(instrument_ids)
+            # self.__wind_from_direction_uncertainty = self.__calculate_DD_direction_uncertainty(instrument_ids)
             ds_temp = self.__create_dd_ds(measurements)
             self.uncertainty = xr.merge([self.uncertainty, ds_temp])
             self.uncertainty = self.__update_metadata(self.uncertainty, 'dual-Doppler')
